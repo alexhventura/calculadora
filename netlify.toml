@@ -1,0 +1,32 @@
+[build]
+  publish = "dist"
+  command = "npm run build && npx playwright install chromium"
+
+[[redirects]]
+  from = "/calculadora/juros-compostos"
+  to = "/juros-compostos"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/calculadora/clt-vs-pj"
+  to = "/clt-pj"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/calculadora/aposentadoria"
+  to = "/aposentadoria"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/calculadora/rescisao-trabalhista"
+  to = "/rescisao-trabalhista"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
