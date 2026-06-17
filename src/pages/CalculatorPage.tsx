@@ -8,7 +8,6 @@ import {
   Coins, 
   HelpCircle, 
   Calculator, 
-  ChevronRight, 
   RotateCcw,
   Info,
   Briefcase,
@@ -35,6 +34,7 @@ import { formatMilhar, parseMilhar, formatBRL } from '../utils/format';
 import { useEconomicRates } from '../hooks/useEconomicRates';
 import { useExchangeRates } from '../hooks/useExchangeRates';
 import { calculateToolResult } from '../utils/calculations/toolCalculations';
+import CurrencyFeaturedCard from '../components/currency/CurrencyFeaturedCard';
 
 const EvolucaoChart = lazy(() => import('../components/EvolucaoChart'));
 const TabelaMensal = lazy(() => import('../components/TabelaMensal'));
@@ -380,6 +380,9 @@ export default function CalculatorPage({
       <main id="conteudo-principal" className="max-w-7xl mx-auto w-full min-w-0 px-4 md:px-8 lg:px-12 py-8 flex-1 flex flex-col gap-8">
         <Breadcrumbs items={[{ label: 'Início', href: '/' }, { label: toolContent.h1 }]} />
         <h1 className="sr-only">{toolContent.h1}</h1>
+
+        <CurrencyFeaturedCard />
+
         {/* Navegação + área ativa agrupadas visualmente */}
         <div className="flex flex-col gap-3">
         <section className="w-full flex flex-col gap-4" aria-labelledby="tool-selector-heading">
@@ -450,27 +453,6 @@ export default function CalculatorPage({
               );
             })}
           </div>
-        </section>
-
-        {/* Ferramenta de câmbio — separada das calculadoras */}
-        <section className="w-full" aria-labelledby="currency-tool-heading">
-          <h2 id="currency-tool-heading" className="sr-only">Conversor de moedas</h2>
-          <Link
-            to={ROUTES.conversorMoedas}
-            className="group flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl border border-amber-200/70 bg-gradient-to-r from-amber-50/80 to-white p-4 sm:p-5 hover:border-amber-300 hover:shadow-sm transition-all"
-          >
-            <div className="p-2.5 rounded-xl bg-amber-100/80 text-amber-800 shrink-0">
-              <Coins className="w-5 h-5" aria-hidden="true" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700">Ferramenta independente</p>
-              <h3 className="font-semibold text-slate-900 mt-0.5">Conversor de Moedas</h3>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                Cotação em tempo real, histórico e conversão entre mais de 100 moedas — em página dedicada.
-              </p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-amber-600 shrink-0 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
-          </Link>
         </section>
 
         {/* Área da calculadora selecionada — agrupamento estático, sem sobreposição */}
