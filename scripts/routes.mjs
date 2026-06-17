@@ -1,5 +1,5 @@
 /** Rotas indexáveis — espelho de src/constants/routes.ts para scripts de build */
-export const SITE_URL = 'https://calculojuroscompostos.com';
+export const SITE_URL = 'https://calculojuroscompostos.com.br';
 
 export const INDEXABLE_PATHS = [
   '/',
@@ -20,7 +20,6 @@ export const INDEXABLE_PATHS = [
   '/blog/tesouro-direto-vale-a-pena',
   '/blog/como-sair-das-dividas',
   '/sobre',
-  '/contato',
   '/politica-de-privacidade',
   '/termos-de-uso',
   '/politica-de-cookies',

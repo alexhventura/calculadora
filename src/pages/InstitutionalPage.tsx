@@ -16,7 +16,6 @@ import { SITE_URL } from '../constants/site';
 
 const PAGE_PATHS: Record<keyof typeof INSTITUTIONAL_PAGES, string> = {
   sobre: ROUTES.sobre,
-  contato: ROUTES.contato,
   privacidade: ROUTES.privacidade,
   termos: ROUTES.termos,
   cookies: ROUTES.cookies,

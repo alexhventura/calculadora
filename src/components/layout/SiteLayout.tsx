@@ -1,7 +1,7 @@
 import { Link, Outlet } from 'react-router-dom';
 import SkipLink from './SkipLink';
 import { ROUTES } from '../../constants/routes';
-import { SITE_TAGLINE } from '../../constants/site';
+import { SITE_TAGLINE, SITE_DOMAIN } from '../../constants/site';
 
 export default function SiteLayout() {
   return (
@@ -9,13 +9,13 @@ export default function SiteLayout() {
       <SkipLink />
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 py-4 px-6 md:px-12 shadow-xs" role="banner">
         <div className="max-w-7xl mx-auto w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <Link to={ROUTES.home} className="flex items-center gap-2.5" aria-label="calculojuroscompostos.com — Início">
+          <Link to={ROUTES.home} className="flex items-center gap-2.5" aria-label={`${SITE_DOMAIN} — Início`}>
             <div className="w-9 h-9 rounded-full bg-[#800020] flex items-center justify-center shadow-md">
               <span className="text-white font-extrabold text-base">%</span>
             </div>
             <div>
               <span className="font-extrabold text-xl tracking-tight text-slate-900">
-                calculo<span className="text-[#800020]">juroscompostos</span>.com
+                calculo<span className="text-[#800020]">juroscompostos</span>.com.br
               </span>
               <span className="text-[10px] font-semibold text-slate-400 block -mt-1 tracking-wider uppercase">{SITE_TAGLINE}</span>
             </div>
@@ -24,7 +24,6 @@ export default function SiteLayout() {
             <Link to={ROUTES.home} className="hover:text-[#800020] transition-colors">Calculadoras</Link>
             <Link to={ROUTES.blog} className="hover:text-[#800020] transition-colors">Blog</Link>
             <Link to={ROUTES.sobre} className="hover:text-[#800020] transition-colors">Sobre</Link>
-            <Link to={ROUTES.contato} className="hover:text-[#800020] transition-colors">Contato</Link>
           </nav>
         </div>
       </header>
@@ -36,12 +35,11 @@ export default function SiteLayout() {
               <span className="text-white font-bold text-xs">%</span>
             </div>
             <span className="font-bold text-sm text-slate-100 tracking-tight">
-              calculo<span className="text-[#bf1e44]">juroscompostos</span>.com
+              calculo<span className="text-[#bf1e44]">juroscompostos</span>.com.br
             </span>
           </Link>
           <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-slate-500 font-medium" aria-label="Links institucionais">
             <Link to={ROUTES.sobre} className="hover:text-white transition-colors">Sobre</Link>
-            <Link to={ROUTES.contato} className="hover:text-white transition-colors">Contato</Link>
             <Link to={ROUTES.termos} className="hover:text-white transition-colors">Termos de Uso</Link>
             <Link to={ROUTES.privacidade} className="hover:text-white transition-colors">Privacidade</Link>
             <Link to={ROUTES.cookies} className="hover:text-white transition-colors">Cookies</Link>
@@ -50,7 +48,7 @@ export default function SiteLayout() {
           <p className="max-w-3xl text-[11px] text-slate-500 leading-relaxed font-sans">
             Conteúdo educativo. Não constitui recomendação de investimento ou assessoria profissional.
           </p>
-          <div className="text-[10px] text-slate-600 font-mono">© 2026 calculojuroscompostos.com</div>
+          <div className="text-[10px] text-slate-600 font-mono">© 2026 {SITE_DOMAIN}</div>
         </div>
       </footer>
     </div>

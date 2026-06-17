@@ -69,7 +69,6 @@ export default function App() {
             }
           />
           <Route path={ROUTES.sobre} element={<Suspense fallback={<PageFallback />}><InstitutionalPage pageKey="sobre" /></Suspense>} />
-          <Route path={ROUTES.contato} element={<Suspense fallback={<PageFallback />}><InstitutionalPage pageKey="contato" /></Suspense>} />
           <Route path={ROUTES.privacidade} element={<Suspense fallback={<PageFallback />}><InstitutionalPage pageKey="privacidade" /></Suspense>} />
           <Route path={ROUTES.termos} element={<Suspense fallback={<PageFallback />}><InstitutionalPage pageKey="termos" /></Suspense>} />
           <Route path={ROUTES.cookies} element={<Suspense fallback={<PageFallback />}><InstitutionalPage pageKey="cookies" /></Suspense>} />

@@ -9,7 +9,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
       'Aprenda a calcular juros compostos passo a passo. Fórmula, exemplos práticos, diferença para juros simples e calculadora gratuita online.',
     publishedAt: '2026-03-01',
     updatedAt: '2026-06-15',
-    author: 'Equipe calculojuroscompostos.com',
+    author: 'Equipe calculojuroscompostos.com.br',
     category: 'Investimentos',
     readTimeMinutes: 8,
     intro:
@@ -56,7 +56,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
       'Descubra quanto investir por mês para se aposentar com tranquilidade. Lacuna INSS, patrimônio necessário e aportes mensais.',
     publishedAt: '2026-03-15',
     updatedAt: '2026-06-15',
-    author: 'Equipe calculojuroscompostos.com',
+    author: 'Equipe calculojuroscompostos.com.br',
     category: 'Aposentadoria',
     readTimeMinutes: 7,
     intro:
@@ -92,7 +92,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
       'Compare CDI e Poupança: regras, rentabilidade, liquidez e tributação. Simule com calculadora de juros compostos.',
     publishedAt: '2026-04-01',
     updatedAt: '2026-06-15',
-    author: 'Equipe calculojuroscompostos.com',
+    author: 'Equipe calculojuroscompostos.com.br',
     category: 'Investimentos',
     readTimeMinutes: 6,
     intro:
@@ -127,7 +127,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
       'Entenda Tesouro Selic, IPCA+ e Prefixado. Vantagens, riscos, taxas e quando vale a pena investir no Tesouro Direto.',
     publishedAt: '2026-04-15',
     updatedAt: '2026-06-15',
-    author: 'Equipe calculojuroscompostos.com',
+    author: 'Equipe calculojuroscompostos.com.br',
     category: 'Investimentos',
     readTimeMinutes: 9,
     intro:
@@ -162,7 +162,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
       'Guia para quitar dívidas: priorize juros altos, negocie, corte gastos e use juros compostos a seu favor. Plano passo a passo.',
     publishedAt: '2026-05-01',
     updatedAt: '2026-06-15',
-    author: 'Equipe calculojuroscompostos.com',
+    author: 'Equipe calculojuroscompostos.com.br',
     category: 'Finanças Pessoais',
     readTimeMinutes: 8,
     intro:

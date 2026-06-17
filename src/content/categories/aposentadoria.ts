@@ -15,7 +15,7 @@ export const aposentadoriaHub: HubContentBase = {
   intro:
     'Aposentadoria no Brasil combina benefício público do INSS, eventual complemento por previdência privada e, cada vez mais, patrimônio acumulado pelo próprio trabalhador. Com reformas que elevaram idade mínima e exigências de contribuição, planejar cedo deixou de ser opcional. Este guia explica como funciona o sistema previdenciário, o papel dos juros compostos na acumulação de longo prazo, o efeito da inflação sobre a renda futura e o que significa buscar independência financeira — com referência ao INSS, Ministério da Previdência Social e Banco Central.',
   updatedAt: '2026-06-15',
-  author: 'Equipe calculojuroscompostos.com',
+  author: 'Equipe calculojuroscompostos.com.br',
   sections: [
     {
       id: 'planejamento-aposentadoria',

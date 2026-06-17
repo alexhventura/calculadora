@@ -16,7 +16,7 @@ export const investimentosHub: HubContentBase = {
   intro:
     'Investir é alocar recursos hoje com a expectativa de retorno futuro — mas no Brasil isso envolve entender indicadores como CDI e Selic, produtos regulados pela CVM e títulos do Tesouro Nacional. Este guia reúne conceitos fundamentais, instrumentos disponíveis ao investidor pessoa física e princípios de gestão de risco, sempre com referência a fontes oficiais do Banco Central, CVM, Tesouro Direto e B3.',
   updatedAt: '2026-06-15',
-  author: 'Equipe calculojuroscompostos.com',
+  author: 'Equipe calculojuroscompostos.com.br',
   sections: [
     {
       id: 'o-que-sao',

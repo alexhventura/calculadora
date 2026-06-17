@@ -1,5 +1,7 @@
+import { SITE_AUTHOR } from './site';
+
 export const CONTENT_AUTHOR = {
-  name: 'Equipe calculojuroscompostos.com',
+  name: SITE_AUTHOR,
   role: 'Especialistas em educação financeira',
   bio: 'Conteúdo produzido por profissionais com experiência em planejamento financeiro pessoal, legislação trabalhista brasileira e matemática financeira aplicada.',
 } as const;

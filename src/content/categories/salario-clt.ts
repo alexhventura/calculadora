@@ -15,7 +15,7 @@ export const salarioCltHub: HubContentBase = {
   intro:
     'O regime CLT (Consolidação das Leis do Trabalho) é o modelo de contrato de trabalho mais comum no Brasil. Para o trabalhador, entender a diferença entre salário bruto e líquido, os descontos obrigatórios, direitos como férias e 13º salário e o que compõe a rescisão é essencial para negociar emprego e planejar finanças pessoais. Este guia reúne os principais conceitos trabalhistas e tributários do emprego formal, com referência ao Ministério do Trabalho e Emprego, Gov.br e Receita Federal.',
   updatedAt: '2026-06-15',
-  author: 'Equipe calculojuroscompostos.com',
+  author: 'Equipe calculojuroscompostos.com.br',
   sections: [
     {
       id: 'o-que-e-clt',

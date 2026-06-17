@@ -7,7 +7,7 @@ import ContentHeader from '../components/content/ContentHeader';
 import EeatBlock from '../components/content/EeatBlock';
 import { BLOG_ARTICLES } from '../content/blog/articles';
 import { ROUTES } from '../constants/routes';
-import { SITE_URL } from '../constants/site';
+import { SITE_URL, SITE_AUTHOR } from '../constants/site';
 import { CATEGORY_HUB_SLUGS } from '../content/categories';
 
 const BLOG_CATEGORIES = [...new Set(BLOG_ARTICLES.map((a) => a.category))].sort();
@@ -41,8 +41,8 @@ export default function BlogListPage() {
         <ContentHeader
           h1="Blog de Educação Financeira"
           intro="Guias práticos e aprofundados sobre investimentos, aposentadoria, trabalho e finanças pessoais — escritos para complementar nossas calculadoras e fortalecer sua autonomia financeira."
-          author="Equipe calculojuroscompostos.com"
-          updatedAt="2026-06-15"
+          author={SITE_AUTHOR}
+          updatedAt="2026-06-16"
         />
 
         <nav className="flex flex-wrap gap-2 mb-6" aria-label="Filtrar por categoria">

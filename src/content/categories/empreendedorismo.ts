@@ -11,7 +11,7 @@ export const empreendedorismoHub: HubContentBase = {
   intro:
     'Empreender no Brasil exige dominar não apenas a ideia de negócio, mas tributação, fluxo de caixa e planejamento financeiro. Este guia aborda desde o MEI até o Simples Nacional, formação de preços, capital de giro e decisões como migrar de CLT para PJ — com referência a fontes oficiais do SEBRAE, Receita Federal e Gov.br.',
   updatedAt: '2026-06-15',
-  author: 'Equipe calculojuroscompostos.com',
+  author: 'Equipe calculojuroscompostos.com.br',
   sections: [
     {
       id: 'abertura',

@@ -31,7 +31,7 @@ import Breadcrumbs from '../components/layout/Breadcrumbs';
 import ToolSeoContent from '../components/content/ToolSeoContent';
 import { getToolContent, type SeoVariant } from '../content/tools';
 import { SLUG_TO_TOOL, toolPath, ROUTES } from '../constants/routes';
-import { SITE_URL } from '../constants/site';
+import { SITE_URL, SITE_DOMAIN } from '../constants/site';
 import type { ActiveTool } from '../utils/calculations/toolCalculations';
 import { formatMilhar, parseMilhar, formatBRL } from '../utils/format';
 import { useEconomicRates } from '../hooks/useEconomicRates';
@@ -324,13 +324,13 @@ export default function CalculatorPage({
         <div className="max-w-7xl mx-auto w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           
           {/* Símbolo da Marca */}
-          <div className="flex items-center gap-2.5" aria-label="calculojuroscompostos.com — Finanças Inteligentes">
+          <div className="flex items-center gap-2.5" aria-label={`${SITE_DOMAIN} — Finanças Inteligentes`}>
             <div className="w-9 h-9 rounded-full bg-[#800020] flex items-center justify-center shadow-md">
               <span className="text-white font-extrabold text-base">%</span>
             </div>
             <div>
               <span className="font-extrabold text-xl tracking-tight text-slate-900">
-                calculo<span className="text-[#800020]">juroscompostos</span>.com
+                calculo<span className="text-[#800020]">juroscompostos</span>.com.br
               </span>
               <span className="text-[10px] font-semibold text-slate-400 block -mt-1 tracking-wider uppercase font-sans">Finanças Inteligentes</span>
             </div>
@@ -1582,7 +1582,7 @@ export default function CalculatorPage({
               <span className="text-white font-bold text-xs">%</span>
             </div>
             <span className="font-bold text-sm text-slate-100 tracking-tight">
-              calculo<span className="text-[#bf1e44]">juroscompostos</span>.com
+              calculo<span className="text-[#bf1e44]">juroscompostos</span>.com.br
             </span>
           </div>
 
@@ -1595,8 +1595,6 @@ export default function CalculatorPage({
             <Link to={ROUTES.sobre} className="hover:text-white transition-colors">Sobre</Link>
             <span className="text-slate-700 hidden sm:inline">|</span>
             <Link to={ROUTES.blog} className="hover:text-white transition-colors">Blog</Link>
-            <span className="text-slate-700 hidden sm:inline">|</span>
-            <Link to={ROUTES.contato} className="hover:text-white transition-colors">Contato</Link>
             <span className="text-slate-700 hidden sm:inline">|</span>
             <Link to={ROUTES.cookies} className="hover:text-white transition-colors">Cookies</Link>
             <span className="text-slate-700 hidden sm:inline">|</span>
@@ -1621,7 +1619,7 @@ export default function CalculatorPage({
           </p>
 
           <div className="text-[10px] text-slate-600 mt-2 font-mono">
-            © 2026 calculojuroscompostos.com. Todos os direitos reservados.
+            © 2026 {SITE_DOMAIN}. Todos os direitos reservados.
           </div>
 
         </div>

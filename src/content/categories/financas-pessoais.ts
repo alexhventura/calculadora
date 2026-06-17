@@ -11,7 +11,7 @@ export const financasPessoaisHub: HubContentBase = {
   intro:
     'Finanças pessoais não são apenas sobre cortar gastos — são sobre tomar decisões conscientes com o dinheiro que entra e sai da sua vida. No Brasil, onde juros de crédito costumam ser elevados e a inflação corrói o poder de compra, organizar o orçamento, construir reserva de emergência e definir metas claras faz diferença real no bem-estar financeiro. Este guia aborda desde o diagnóstico da situação atual até o planejamento familiar e o consumo consciente, com referência a orientações do Banco Central e da CVM sobre educação financeira.',
   updatedAt: '2026-06-15',
-  author: 'Equipe calculojuroscompostos.com',
+  author: 'Equipe calculojuroscompostos.com.br',
   sections: [
     {
       id: 'organizacao-financeira',
