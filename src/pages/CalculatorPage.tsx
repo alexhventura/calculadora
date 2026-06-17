@@ -74,6 +74,11 @@ const TOOL_SELECTOR_META: Record<
   },
 };
 
+/** Superfície compartilhada entre card ativo no seletor e área de campos da calculadora */
+const ACTIVE_WORKSPACE_SURFACE = 'bg-slate-50/70 border-slate-200/60';
+
+const TOOL_SELECTOR_ORDER: ActiveTool[] = ['juros', 'clt-pj', 'rescisao', 'aposentadoria'];
+
 function ChartFallback() {
   return (
     <div
@@ -413,119 +418,55 @@ export default function CalculatorPage({
             role="group"
             aria-label="Seletor de ferramentas financeiras"
           >
-            
-            {/* Tool 1: Juros Compostos */ /* @id bento_juros */}
-            <button
-              id="bento_juros"
-              type="button"
-              aria-pressed={activeTool === 'juros'}
-              onClick={() => navigateToTool('juros')}
-              className={`flex flex-col text-left p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden select-none h-full justify-between gap-3 min-h-[4.5rem] touch-target sm:min-h-0 ${
-                activeTool === 'juros'
-                  ? 'bg-rose-50/60 border-[#800020]/40 ring-1 ring-[#800020]/20'
-                  : 'bg-slate-50/50 border-slate-200/80 hover:border-slate-300 hover:bg-white'
-              }`}
-            >
-              <div className="flex items-center justify-between w-full">
-                <div className={`p-2 rounded-xl ${activeTool === 'juros' ? 'bg-rose-50 text-[#800020]' : 'bg-slate-100 text-slate-500'}`}>
-                  <Calculator className="w-5 h-5" />
-                </div>
-                {activeTool === 'juros' && (
-                  <span className="w-2 h-2 rounded-full bg-[#800020]"></span>
-                )}
-              </div>
-              <div>
-                <h3 className="font-bold text-sm text-slate-900 leading-snug">Juros Compostos</h3>
-                <p className="text-[10px] text-slate-500 mt-0.5 leading-relaxed">
-                  Crescimento de patrimônio a longo prazo com taxas e IPCA real.
-                </p>
-              </div>
-            </button>
+            {TOOL_SELECTOR_ORDER.map((tool) => {
+              const meta = TOOL_SELECTOR_META[tool];
+              const Icon = meta.Icon;
+              const isActive = activeTool === tool;
 
-            {/* Tool 2: CLT vs PJ */ /* @id bento_clt_pj */}
-            <button
-              id="bento_clt_pj"
-              type="button"
-              aria-pressed={activeTool === 'clt-pj'}
-              onClick={() => navigateToTool('clt-pj')}
-              className={`flex flex-col text-left p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden select-none h-full justify-between gap-3 min-h-[4.5rem] touch-target sm:min-h-0 ${
-                activeTool === 'clt-pj'
-                  ? 'bg-rose-50/60 border-[#800020]/40 ring-1 ring-[#800020]/20'
-                  : 'bg-slate-50/50 border-slate-200/80 hover:border-slate-300 hover:bg-white'
-              }`}
-            >
-              <div className="flex items-center justify-between w-full">
-                <div className={`p-2 rounded-xl ${activeTool === 'clt-pj' ? 'bg-rose-50 text-[#800020]' : 'bg-slate-100 text-slate-500'}`}>
-                  <Briefcase className="w-5 h-5" />
-                </div>
-                {activeTool === 'clt-pj' && (
-                  <span className="w-2 h-2 rounded-full bg-[#800020]"></span>
-                )}
-              </div>
-              <div>
-                <h3 className="font-bold text-sm text-slate-900 leading-snug">CLT vs PJ Analítico</h3>
-                <p className="text-[10px] text-slate-500 mt-0.5 leading-relaxed">
-                  Custo-benefício real e faturamento equivalente Simples Nacional.
-                </p>
-              </div>
-            </button>
-
-            {/* Tool 3: Rescisão Contratual */ /* @id bento_rescisao */}
-            <button
-              id="bento_rescisao"
-              type="button"
-              aria-pressed={activeTool === 'rescisao'}
-              onClick={() => navigateToTool('rescisao')}
-              className={`flex flex-col text-left p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden select-none h-full justify-between gap-3 min-h-[4.5rem] touch-target sm:min-h-0 ${
-                activeTool === 'rescisao'
-                  ? 'bg-rose-50/60 border-[#800020]/40 ring-1 ring-[#800020]/20'
-                  : 'bg-slate-50/50 border-slate-200/80 hover:border-slate-300 hover:bg-white'
-              }`}
-            >
-              <div className="flex items-center justify-between w-full">
-                <div className={`p-2 rounded-xl ${activeTool === 'rescisao' ? 'bg-rose-50 text-[#800020]' : 'bg-slate-100 text-slate-500'}`}>
-                  <Scale className="w-5 h-5" />
-                </div>
-                {activeTool === 'rescisao' && (
-                  <span className="w-2 h-2 rounded-full bg-[#800020]"></span>
-                )}
-              </div>
-              <div>
-                <h3 className="font-bold text-sm text-slate-900 leading-snug">Rescisão Trabalhista</h3>
-                <p className="text-[10px] text-slate-500 mt-0.5 leading-relaxed">
-                  Cálculo preciso de verbas rescisórias, saldo, férias e FGTS.
-                </p>
-              </div>
-            </button>
-
-            {/* Tool 4: Previdência & Aposentadoria */ /* @id bento_aposentadoria */}
-            <button
-              id="bento_aposentadoria"
-              type="button"
-              aria-pressed={activeTool === 'aposentadoria'}
-              onClick={() => navigateToTool('aposentadoria')}
-              className={`flex flex-col text-left p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden select-none h-full justify-between gap-3 min-h-[4.5rem] touch-target sm:min-h-0 ${
-                activeTool === 'aposentadoria'
-                  ? 'bg-rose-50/60 border-[#800020]/40 ring-1 ring-[#800020]/20'
-                  : 'bg-slate-50/50 border-slate-200/80 hover:border-slate-300 hover:bg-white'
-              }`}
-            >
-              <div className="flex items-center justify-between w-full">
-                <div className={`p-2 rounded-xl ${activeTool === 'aposentadoria' ? 'bg-rose-50 text-[#800020]' : 'bg-slate-100 text-slate-500'}`}>
-                  <Calendar className="w-5 h-5" />
-                </div>
-                {activeTool === 'aposentadoria' && (
-                  <span className="w-2 h-2 rounded-full bg-[#800020]"></span>
-                )}
-              </div>
-              <div>
-                <h3 className="font-bold text-sm text-slate-900 leading-snug">Previdência & Aposentadoria</h3>
-                <p className="text-[10px] text-slate-500 mt-0.5 leading-relaxed">
-                  Projeção INSS, teto progressivo e aportes para renda desejada.
-                </p>
-              </div>
-            </button>
-
+              return (
+                <button
+                  key={tool}
+                  id={meta.bentoId}
+                  type="button"
+                  aria-pressed={isActive}
+                  aria-current={isActive ? 'true' : undefined}
+                  onClick={() => navigateToTool(tool)}
+                  className={`flex flex-col text-left rounded-2xl transition-all cursor-pointer relative overflow-hidden select-none h-full touch-target sm:min-h-0 min-h-[4.5rem] p-1.5 ${
+                    isActive
+                      ? `${ACTIVE_WORKSPACE_SURFACE} border-2 ring-2 ring-[#800020]/20 shadow-sm z-[1]`
+                      : 'border-2 border-transparent hover:bg-slate-50/40'
+                  }`}
+                >
+                  <div
+                    className={`flex flex-col flex-1 h-full justify-between gap-3 p-4 rounded-xl border transition-all ${
+                      isActive
+                        ? 'bg-white border-slate-200/60 shadow-xs'
+                        : 'bg-slate-50/50 border-slate-200/80 hover:border-slate-300 hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <div
+                        className={`p-2 rounded-xl ${
+                          isActive ? 'bg-rose-50 text-[#800020]' : 'bg-slate-100 text-slate-500'
+                        }`}
+                      >
+                        <Icon className="w-5 h-5" aria-hidden="true" />
+                      </div>
+                      {isActive && (
+                        <span
+                          className="w-2 h-2 rounded-full bg-[#800020]"
+                          aria-hidden="true"
+                        />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm text-slate-900 leading-snug">{meta.title}</h3>
+                      <p className="text-[10px] text-slate-500 mt-0.5 leading-relaxed">{meta.description}</p>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </section>
 
@@ -581,7 +522,7 @@ export default function CalculatorPage({
 
           {/* Conteúdo operacional: formulário, resultados, gráficos e tabelas */}
           <div className="px-4 pb-6 md:px-8 md:pb-8 lg:px-10 lg:pb-10 pt-4 md:pt-5">
-            <div className="rounded-2xl bg-slate-50/70 border border-slate-200/60 p-4 md:p-6 lg:p-8">
+            <div className={`rounded-2xl ${ACTIVE_WORKSPACE_SURFACE} border p-4 md:p-6 lg:p-8`}>
               <p className="sr-only">
                 Área de trabalho da calculadora {activeToolMeta.title}. Inclui campos de entrada, resultados, gráficos e tabelas.
               </p>
