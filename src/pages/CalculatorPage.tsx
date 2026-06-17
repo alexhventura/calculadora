@@ -10,7 +10,6 @@ import {
   ArrowRightLeft, 
   Calculator, 
   ChevronRight, 
-  ChevronDown,
   RotateCcw,
   Info,
   Briefcase,
@@ -75,9 +74,8 @@ const TOOL_SELECTOR_META: Record<
   },
 };
 
-/** Superfície visível compartilhada: margem do card ativo no seletor + container de campos */
-const ACTIVE_TOOL_SURFACE = 'bg-slate-100';
-const ACTIVE_TOOL_OUTLINE = 'border-2 border-[#800020]';
+/** Superfície compartilhada: card ativo no seletor + área de campos (estilo premium minimal) */
+const ACTIVE_TOOL_SURFACE = 'bg-slate-50';
 
 const TOOL_SELECTOR_ORDER: ActiveTool[] = ['juros', 'clt-pj', 'rescisao', 'aposentadoria'];
 
@@ -411,13 +409,13 @@ export default function CalculatorPage({
               Seletor de Ferramenta Financeira
             </h2>
             <p className="text-xs text-slate-500 font-medium">
-              Escolha abaixo qual calculadora deseja utilizar. O conteúdo aparecerá na área destacada em seguida.
+              Escolha a calculadora desejada. A área de trabalho aparece logo abaixo.
             </p>
           </div>
 
           <div
             id="bento-selector"
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 rounded-2xl border border-slate-200/80 bg-white p-3 sm:p-4 pt-5 sm:pt-6 shadow-xs overflow-visible"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 rounded-2xl border border-slate-200/70 bg-white p-2.5 sm:p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
             role="group"
             aria-label="Seletor de ferramentas financeiras"
           >
@@ -434,47 +432,39 @@ export default function CalculatorPage({
                   aria-pressed={isActive}
                   aria-current={isActive ? 'true' : undefined}
                   onClick={() => navigateToTool(tool)}
-                  className={`relative flex flex-col text-left rounded-2xl transition-all duration-200 cursor-pointer select-none h-full touch-target sm:min-h-0 min-h-[4.5rem] overflow-visible ${
+                  className={`flex flex-col text-left rounded-xl p-1.5 transition-all duration-300 ease-out cursor-pointer select-none h-full touch-target sm:min-h-0 min-h-[4.5rem] ${
                     isActive
-                      ? `p-3 ${ACTIVE_TOOL_SURFACE} ${ACTIVE_TOOL_OUTLINE} shadow-lg shadow-[#800020]/20 z-10 scale-[1.02]`
-                      : 'p-2 border-2 border-slate-200/60 bg-white opacity-45 hover:opacity-100 hover:border-slate-300 hover:shadow-sm'
+                      ? `${ACTIVE_TOOL_SURFACE} ring-1 ring-[#800020]/15`
+                      : 'ring-1 ring-transparent hover:ring-slate-200/90'
                   }`}
                 >
-                  {isActive && (
-                    <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[#800020] text-white text-[9px] font-extrabold uppercase tracking-wider shadow-md z-20 whitespace-nowrap">
-                      Calculadora ativa
-                    </span>
-                  )}
                   <div
-                    className={`flex flex-col flex-1 h-full justify-between gap-3 p-4 rounded-xl border transition-all ${
+                    className={`flex flex-col flex-1 h-full justify-between gap-3 p-3.5 sm:p-4 rounded-[0.65rem] border transition-all duration-300 ${
                       isActive
-                        ? 'bg-white border-slate-300 shadow-sm'
-                        : 'bg-slate-50/80 border-slate-200/80'
+                        ? 'bg-white border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04)] border-l-[3px] border-l-[#800020]'
+                        : 'bg-white border-slate-200/60 hover:border-slate-300/80 hover:shadow-[0_1px_2px_rgba(15,23,42,0.03)]'
                     }`}
                   >
-                    <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center justify-between w-full gap-2">
                       <div
-                        className={`p-2 rounded-xl ${
-                          isActive ? 'bg-rose-100 text-[#800020]' : 'bg-slate-100 text-slate-500'
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          isActive ? 'bg-[#800020]/[0.06] text-[#800020]' : 'bg-slate-100 text-slate-500'
                         }`}
                       >
-                        <Icon className="w-5 h-5" aria-hidden="true" />
+                        <Icon className="w-[1.125rem] h-[1.125rem]" aria-hidden="true" />
                       </div>
                       {isActive && (
                         <span
-                          className="flex h-2.5 w-2.5 relative"
+                          className="h-1.5 w-1.5 rounded-full bg-[#800020] shrink-0"
                           aria-hidden="true"
-                        >
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#800020] opacity-40" />
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#800020]" />
-                        </span>
+                        />
                       )}
                     </div>
                     <div>
-                      <h3 className={`font-bold text-sm leading-snug ${isActive ? 'text-[#800020]' : 'text-slate-900'}`}>
+                      <h3 className={`font-semibold text-[13px] leading-snug tracking-tight ${isActive ? 'text-slate-900' : 'text-slate-800'}`}>
                         {meta.title}
                       </h3>
-                      <p className="text-[10px] text-slate-500 mt-0.5 leading-relaxed">{meta.description}</p>
+                      <p className="text-[10px] text-slate-500 mt-1 leading-relaxed line-clamp-2">{meta.description}</p>
                     </div>
                   </div>
                 </button>
@@ -483,52 +473,37 @@ export default function CalculatorPage({
           </div>
         </section>
 
-        {/* Grupo visual: conector + área da calculadora selecionada (mesma moldura slate-100) */}
+        {/* Área da calculadora selecionada */}
         <div className="flex flex-col gap-0">
-          <div
-            className={`flex items-center gap-3 px-4 py-3 md:px-6 md:py-3.5 ${ACTIVE_TOOL_SURFACE} ${ACTIVE_TOOL_OUTLINE} rounded-t-2xl`}
-            role="status"
-            aria-live="polite"
-          >
-            <ChevronDown className="w-5 h-5 text-[#800020] shrink-0" aria-hidden="true" />
-            <div className="p-1.5 rounded-lg bg-white border border-[#800020]/20 text-[#800020] shrink-0">
-              <ActiveToolIcon className="w-4 h-4" aria-hidden="true" />
-            </div>
-            <p className="text-sm font-semibold text-slate-800 min-w-0">
-              <span className="text-[#800020] font-extrabold">{activeToolMeta.title}</span>
-              <span className="hidden sm:inline text-slate-600 font-medium"> — campos, resultados e gráficos abaixo</span>
-              <span className="sm:hidden block text-[11px] text-slate-500 font-medium">Campos e resultados abaixo</span>
-            </p>
+          <div className="flex items-center gap-3 py-3 px-1" role="status" aria-live="polite">
+            <div className="h-px flex-1 bg-slate-200/90" aria-hidden="true" />
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 tracking-tight shrink-0">
+              <ActiveToolIcon className="w-3.5 h-3.5 text-[#800020]" aria-hidden="true" />
+              {activeToolMeta.title}
+            </span>
+            <div className="h-px flex-1 bg-slate-200/90" aria-hidden="true" />
           </div>
 
-        {/* ÁREA 2: Container da calculadora ativa */}
         <div
           id="active-calculator-workspace"
           role="region"
           aria-labelledby="active-tool-heading"
-          className={`rounded-b-2xl md:rounded-b-3xl bg-white ${ACTIVE_TOOL_OUTLINE} border-t-0 shadow-lg shadow-[#800020]/10 overflow-hidden scroll-mt-28`}
+          className="rounded-2xl md:rounded-[1.25rem] bg-white border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_30px_rgba(15,23,42,0.04)] overflow-hidden scroll-mt-28"
         >
-          {/* Barra de contexto fixa — mantém identificação ao rolar */}
-          <div className={`sticky top-[4.25rem] z-30 flex items-center gap-3 px-4 py-3 md:px-8 md:py-4 ${ACTIVE_TOOL_SURFACE} border-b-2 border-[#800020]/20`}>
-            <div className="p-2 rounded-xl bg-rose-50 text-[#800020] shrink-0">
-              <ActiveToolIcon className="w-5 h-5" aria-hidden="true" />
+          <div className="sticky top-[4.25rem] z-30 flex items-center gap-2.5 px-4 py-2.5 md:px-6 md:py-3 bg-white/80 backdrop-blur-xl border-b border-slate-200/70 supports-[backdrop-filter]:bg-white/70">
+            <div className="p-1.5 rounded-lg bg-[#800020]/[0.06] text-[#800020] shrink-0">
+              <ActiveToolIcon className="w-4 h-4" aria-hidden="true" />
             </div>
-            <div className="flex-1 min-w-0 text-left">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#800020] block">
-                Calculadora ativa
-              </span>
-              <p id="active-tool-heading" className="font-extrabold text-sm md:text-base text-slate-900 truncate">
-                {activeToolMeta.title}
-              </p>
-            </div>
-            <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full bg-rose-50 border border-[#800020]/15 text-[10px] font-bold uppercase tracking-wide text-[#800020] shrink-0">
+            <p id="active-tool-heading" className="flex-1 min-w-0 font-semibold text-[13px] md:text-sm text-slate-900 truncate tracking-tight">
+              {activeToolMeta.title}
+            </p>
+            <span className="hidden sm:inline text-[10px] font-medium text-slate-400 tracking-wide shrink-0">
               Em uso
             </span>
           </div>
 
-          {/* Conteúdo operacional: formulário, resultados, gráficos e tabelas */}
-          <div className="px-4 pb-6 md:px-8 md:pb-8 lg:px-10 lg:pb-10 pt-4 md:pt-5">
-            <div className={`rounded-2xl ${ACTIVE_TOOL_SURFACE} border-2 border-slate-300 border-l-4 border-l-[#800020] p-4 md:p-6 lg:p-8`}>
+          <div className="px-3 pb-5 md:px-5 md:pb-7 lg:px-7 lg:pb-8 pt-3 md:pt-4">
+            <div className={`rounded-xl ${ACTIVE_TOOL_SURFACE} border border-slate-200/60 p-4 md:p-6 lg:p-8`}>
               <p className="sr-only">
                 Área de trabalho da calculadora {activeToolMeta.title}. Inclui campos de entrada, resultados, gráficos e tabelas.
               </p>
