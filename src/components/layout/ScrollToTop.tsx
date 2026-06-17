@@ -1,13 +1,25 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-/** Garante scroll ao topo em toda mudança de rota. */
+/** Scroll ao topo em mudança de rota; respeita âncoras (#id) na mesma página ou após navegação. */
 export default function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
 
   useEffect(() => {
+    if (hash) {
+      const id = hash.replace('#', '');
+      requestAnimationFrame(() => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+        window.scrollTo(0, 0);
+      });
+      return;
+    }
     window.scrollTo(0, 0);
-  }, [pathname]);
+  }, [pathname, hash]);
 
   return null;
 }
