@@ -14,6 +14,18 @@ export default defineConfig(() => ({
     target: 'es2022',
     cssMinify: true,
     minify: 'esbuild' as const,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/') || id.includes('node_modules/react-router')) {
+            return 'vendor';
+          }
+          if (id.includes('node_modules/lucide-react')) {
+            return 'icons';
+          }
+        },
+      },
+    },
   },
   server: {
     hmr: process.env.DISABLE_HMR !== 'true',

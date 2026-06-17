@@ -26,7 +26,7 @@ export default function InternalLinksSection({
 
       {tools.length > 0 && (
         <div className="mb-5">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Calculadoras</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Calculadoras</h3>
           <div className="grid sm:grid-cols-2 gap-2">
             {tools.map((tool) => (
               <Link
@@ -49,7 +49,7 @@ export default function InternalLinksSection({
 
       {categories.length > 0 && (
         <div className="mb-5">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Guias relacionados</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Guias relacionados</h3>
           <div className="flex flex-wrap gap-2">
             {categories.map((cat) => (
               <Link
@@ -66,7 +66,7 @@ export default function InternalLinksSection({
 
       {articles.length > 0 && (
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Artigos do blog</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Artigos do blog</h3>
           <ul className="space-y-2">
             {articles.map((a) => (
               <li key={a.href}>

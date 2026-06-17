@@ -28,7 +28,7 @@ import SkipLink from '../components/layout/SkipLink';
 import PageMeta from '../components/seo/PageMeta';
 import StructuredData from '../components/seo/StructuredData';
 import Breadcrumbs from '../components/layout/Breadcrumbs';
-import ToolSeoContent from '../components/content/ToolSeoContent';
+const ToolSeoContent = lazy(() => import('../components/content/ToolSeoContent'));
 import { getToolContent, type SeoVariant } from '../content/tools';
 import { SLUG_TO_TOOL, toolPath, ROUTES } from '../constants/routes';
 import { SITE_URL, SITE_DOMAIN } from '../constants/site';
@@ -43,6 +43,36 @@ import { formatConvertedValue, formatExchangeTimestamp, formatRateBRL } from '..
 
 const EvolucaoChart = lazy(() => import('../components/EvolucaoChart'));
 const TabelaMensal = lazy(() => import('../components/TabelaMensal'));
+
+const TOOL_SELECTOR_META: Record<
+  ActiveTool,
+  { bentoId: string; Icon: typeof Calculator; title: string; description: string }
+> = {
+  juros: {
+    bentoId: 'bento_juros',
+    Icon: Calculator,
+    title: 'Juros Compostos',
+    description: 'Crescimento de patrimônio a longo prazo com taxas e IPCA real.',
+  },
+  'clt-pj': {
+    bentoId: 'bento_clt_pj',
+    Icon: Briefcase,
+    title: 'CLT vs PJ Analítico',
+    description: 'Custo-benefício real e faturamento equivalente Simples Nacional.',
+  },
+  rescisao: {
+    bentoId: 'bento_rescisao',
+    Icon: Scale,
+    title: 'Rescisão Trabalhista',
+    description: 'Cálculo preciso de verbas rescisórias, saldo, férias e FGTS.',
+  },
+  aposentadoria: {
+    bentoId: 'bento_aposentadoria',
+    Icon: Calendar,
+    title: 'Previdência & Aposentadoria',
+    description: 'Projeção INSS, teto progressivo e aportes para renda desejada.',
+  },
+};
 
 function ChartFallback() {
   return (
@@ -123,12 +153,8 @@ export default function CalculatorPage({
     navigate(toolPath(tool));
   }, [navigate]);
 
-  const activeBentoId = {
-    juros: 'bento_juros',
-    'clt-pj': 'bento_clt_pj',
-    rescisao: 'bento_rescisao',
-    aposentadoria: 'bento_aposentadoria',
-  }[activeTool];
+  const activeToolMeta = TOOL_SELECTOR_META[activeTool];
+  const ActiveToolIcon = activeToolMeta.Icon;
 
   useEffect(() => {
     if (initialTool) {
@@ -339,7 +365,7 @@ export default function CalculatorPage({
               <span className="font-extrabold text-xl tracking-tight text-slate-900">
                 calculo<span className="text-[#800020]">juroscompostos</span>.com.br
               </span>
-              <span className="text-[10px] font-semibold text-slate-400 block -mt-1 tracking-wider uppercase font-sans">Finanças Inteligentes</span>
+              <span className="text-[10px] font-semibold text-slate-500 block -mt-1 tracking-wider uppercase font-sans">Finanças Inteligentes</span>
             </div>
           </div>
 
@@ -370,30 +396,34 @@ export default function CalculatorPage({
       <main id="conteudo-principal" className="max-w-7xl mx-auto w-full min-w-0 px-4 md:px-8 lg:px-12 py-8 flex-1 flex flex-col gap-8">
         <Breadcrumbs items={[{ label: 'Início', href: '/' }, { label: toolContent.h1 }]} />
         <h1 className="sr-only">{toolContent.h1}</h1>
-        {/* BENTO UI: SELECTOR DE FERRAMENTAS INTELIGENTES */}
-        <section className="w-full flex flex-col gap-4">
-          <div className="flex flex-col">
-            <h2 className="text-xl font-extrabold tracking-tight text-slate-900">Seletor de Ferramenta Financeira</h2>
-            <p className="text-xs text-slate-500 font-medium">Selecione uma calculadora inteligente para realizar projeções, simulações e análise técnica imediata.</p>
+        {/* ÁREA 1: Navegação — seleção de calculadoras (separada do conteúdo ativo) */}
+        <section className="w-full flex flex-col gap-4" aria-labelledby="tool-selector-heading">
+          <div className="flex flex-col gap-1">
+            <h2 id="tool-selector-heading" className="text-xl font-extrabold tracking-tight text-slate-900">
+              Seletor de Ferramenta Financeira
+            </h2>
+            <p className="text-xs text-slate-500 font-medium">
+              Escolha abaixo qual calculadora deseja utilizar. O conteúdo aparecerá na área destacada em seguida.
+            </p>
           </div>
 
           <div
-            id="active-tool-workspace"
-            className="rounded-2xl md:rounded-3xl bg-slate-50/80 border border-slate-200/60 shadow-xs p-3 sm:p-4 md:p-6 lg:p-8 flex flex-col gap-4 md:gap-6 scroll-mt-24"
+            id="bento-selector"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 rounded-2xl border border-slate-200/80 bg-white p-3 sm:p-4 shadow-xs"
+            role="group"
+            aria-label="Seletor de ferramentas financeiras"
           >
-          
-          <div id="bento-selector" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4" role="tablist" aria-label="Seletor de ferramentas financeiras">
             
             {/* Tool 1: Juros Compostos */ /* @id bento_juros */}
             <button
               id="bento_juros"
-              role="tab"
-              aria-selected={activeTool === 'juros'}
+              type="button"
+              aria-pressed={activeTool === 'juros'}
               onClick={() => navigateToTool('juros')}
               className={`flex flex-col text-left p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden select-none h-full justify-between gap-3 min-h-[4.5rem] touch-target sm:min-h-0 ${
                 activeTool === 'juros'
-                  ? 'bg-white border-[#800020] shadow-md ring-2 ring-[#800020]/10 z-[1]'
-                  : 'bg-white/70 border-slate-200/80 hover:border-slate-300 hover:bg-white'
+                  ? 'bg-rose-50/60 border-[#800020]/40 ring-1 ring-[#800020]/20'
+                  : 'bg-slate-50/50 border-slate-200/80 hover:border-slate-300 hover:bg-white'
               }`}
             >
               <div className="flex items-center justify-between w-full">
@@ -415,13 +445,13 @@ export default function CalculatorPage({
             {/* Tool 2: CLT vs PJ */ /* @id bento_clt_pj */}
             <button
               id="bento_clt_pj"
-              role="tab"
-              aria-selected={activeTool === 'clt-pj'}
+              type="button"
+              aria-pressed={activeTool === 'clt-pj'}
               onClick={() => navigateToTool('clt-pj')}
               className={`flex flex-col text-left p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden select-none h-full justify-between gap-3 min-h-[4.5rem] touch-target sm:min-h-0 ${
                 activeTool === 'clt-pj'
-                  ? 'bg-white border-[#800020] shadow-md ring-2 ring-[#800020]/10 z-[1]'
-                  : 'bg-white/70 border-slate-200/80 hover:border-slate-300 hover:bg-white'
+                  ? 'bg-rose-50/60 border-[#800020]/40 ring-1 ring-[#800020]/20'
+                  : 'bg-slate-50/50 border-slate-200/80 hover:border-slate-300 hover:bg-white'
               }`}
             >
               <div className="flex items-center justify-between w-full">
@@ -443,13 +473,13 @@ export default function CalculatorPage({
             {/* Tool 3: Rescisão Contratual */ /* @id bento_rescisao */}
             <button
               id="bento_rescisao"
-              role="tab"
-              aria-selected={activeTool === 'rescisao'}
+              type="button"
+              aria-pressed={activeTool === 'rescisao'}
               onClick={() => navigateToTool('rescisao')}
               className={`flex flex-col text-left p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden select-none h-full justify-between gap-3 min-h-[4.5rem] touch-target sm:min-h-0 ${
                 activeTool === 'rescisao'
-                  ? 'bg-white border-[#800020] shadow-md ring-2 ring-[#800020]/10 z-[1]'
-                  : 'bg-white/70 border-slate-200/80 hover:border-slate-300 hover:bg-white'
+                  ? 'bg-rose-50/60 border-[#800020]/40 ring-1 ring-[#800020]/20'
+                  : 'bg-slate-50/50 border-slate-200/80 hover:border-slate-300 hover:bg-white'
               }`}
             >
               <div className="flex items-center justify-between w-full">
@@ -471,13 +501,13 @@ export default function CalculatorPage({
             {/* Tool 4: Previdência & Aposentadoria */ /* @id bento_aposentadoria */}
             <button
               id="bento_aposentadoria"
-              role="tab"
-              aria-selected={activeTool === 'aposentadoria'}
+              type="button"
+              aria-pressed={activeTool === 'aposentadoria'}
               onClick={() => navigateToTool('aposentadoria')}
               className={`flex flex-col text-left p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden select-none h-full justify-between gap-3 min-h-[4.5rem] touch-target sm:min-h-0 ${
                 activeTool === 'aposentadoria'
-                  ? 'bg-white border-[#800020] shadow-md ring-2 ring-[#800020]/10 z-[1]'
-                  : 'bg-white/70 border-slate-200/80 hover:border-slate-300 hover:bg-white'
+                  ? 'bg-rose-50/60 border-[#800020]/40 ring-1 ring-[#800020]/20'
+                  : 'bg-slate-50/50 border-slate-200/80 hover:border-slate-300 hover:bg-white'
               }`}
             >
               <div className="flex items-center justify-between w-full">
@@ -497,18 +527,69 @@ export default function CalculatorPage({
             </button>
 
           </div>
+        </section>
 
-          <div
-            className="h-px w-full bg-slate-200/80 shrink-0"
-            aria-hidden="true"
-          />
+        {/* Separador visual entre navegação e área ativa */}
+        <div className="relative py-1 md:py-2" aria-hidden="true">
+          <div className="border-t border-dashed border-slate-300/80" />
+        </div>
+
+        {/* ÁREA 2: Container da calculadora ativa — agrupa card, formulário, resultados e gráficos */}
+        <div
+          id="active-calculator-workspace"
+          role="region"
+          aria-labelledby="active-tool-heading"
+          className="rounded-2xl md:rounded-3xl bg-white border border-[#800020]/20 shadow-lg shadow-[#800020]/5 ring-1 ring-[#800020]/10 overflow-hidden scroll-mt-28"
+        >
+          {/* Barra de contexto fixa — mantém identificação ao rolar (mobile/tablet/desktop) */}
+          <div className="sticky top-[4.25rem] z-30 flex items-center gap-3 px-4 py-3 md:px-8 md:py-4 bg-white/95 backdrop-blur-md border-b border-[#800020]/10">
+            <div className="p-2 rounded-xl bg-rose-50 text-[#800020] shrink-0">
+              <ActiveToolIcon className="w-5 h-5" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#800020] block">
+                Calculadora ativa
+              </span>
+              <p id="active-tool-heading" className="font-extrabold text-sm md:text-base text-slate-900 truncate">
+                {activeToolMeta.title}
+              </p>
+            </div>
+            <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full bg-rose-50 border border-[#800020]/15 text-[10px] font-bold uppercase tracking-wide text-[#800020] shrink-0">
+              Em uso
+            </span>
+          </div>
+
+          {/* Card da calculadora selecionada — âncora visual do contexto */}
+          <div className="px-4 pt-5 md:px-8 md:pt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 md:p-5 rounded-2xl bg-gradient-to-r from-rose-50/90 via-rose-50/40 to-white border border-[#800020]/15 shadow-xs">
+              <div className="p-3 rounded-xl bg-white border border-[#800020]/10 text-[#800020] shrink-0 self-start sm:self-center shadow-xs">
+                <ActiveToolIcon className="w-6 h-6" aria-hidden="true" />
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <h3 className="font-extrabold text-base md:text-lg text-slate-900 tracking-tight">
+                  {activeToolMeta.title}
+                </h3>
+                <p className="text-xs text-slate-600 mt-1 leading-relaxed max-w-2xl">
+                  {activeToolMeta.description}
+                </p>
+              </div>
+              <span className="sm:hidden inline-flex self-start items-center px-2.5 py-1 rounded-full bg-[#800020] text-[10px] font-bold uppercase tracking-wide text-white shrink-0">
+                Em uso
+              </span>
+            </div>
+          </div>
+
+          {/* Conteúdo operacional: formulário, resultados, gráficos e tabelas */}
+          <div className="px-4 pb-6 md:px-8 md:pb-8 lg:px-10 lg:pb-10 pt-4 md:pt-5">
+            <div className="rounded-2xl bg-slate-50/70 border border-slate-200/60 p-4 md:p-6 lg:p-8">
+              <p className="sr-only">
+                Área de trabalho da calculadora {activeToolMeta.title}. Inclui campos de entrada, resultados, gráficos e tabelas.
+              </p>
 
         {/* Layout Altamente Flexível e Ordenável: Mobile-First Sequencial vs Desktop Grid */}
         <div
           id={`tool-panel-${activeTool}`}
-          role="tabpanel"
-          aria-labelledby={activeBentoId}
-          className="flex flex-col lg:grid lg:grid-cols-4 gap-6 lg:gap-8 min-w-0 pt-1 md:pt-2"
+          className="flex flex-col lg:grid lg:grid-cols-4 gap-6 lg:gap-8 min-w-0"
         >
           
           {/* LADO ESQUERDO (Width: 1/4) */}
@@ -529,8 +610,9 @@ export default function CalculatorPage({
                     <button 
                       type="button" 
                       onClick={handleReset}
-                      className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-all cursor-pointer"
+                      className="p-1 text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-all cursor-pointer"
                       title="Reiniciar Simulação"
+                      aria-label="Reiniciar simulação"
                     >
                       <RotateCcw className="w-4 h-4" />
                     </button>
@@ -538,13 +620,14 @@ export default function CalculatorPage({
 
                   {/* Campo: Valor Inicial */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700 flex justify-between">
+                    <label htmlFor="valor-inicial" className="text-xs font-semibold text-slate-700 flex justify-between">
                       <span>Valor Inicial (R$)</span>
-                      <span className="font-mono text-slate-400 text-[11px]">Aporte único</span>
+                      <span className="font-mono text-slate-500 text-[11px]">Aporte único</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-bold">R$</span>
+                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold" aria-hidden="true">R$</span>
                       <input
+                        id="valor-inicial"
                         type="text"
                         inputMode="numeric"
                         value={valorInicialStr}
@@ -556,27 +639,29 @@ export default function CalculatorPage({
                         placeholder="0"
                       />
                     </div>
-                    {/* Range Slider decorativo para feedback instantâneo */}
                     <input
+                      id="valor-inicial-range"
                       type="range"
                       min="0"
                       max="500000"
                       step="5000"
                       value={valorInicialNum}
                       onChange={(e) => setValorInicialStr(formatMilhar(e.target.value))}
+                      aria-label="Ajustar valor inicial"
                       className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#800020] mt-1"
                     />
                   </div>
 
                   {/* Campo: Aporte Mensal */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700 flex justify-between">
+                    <label htmlFor="aporte-mensal" className="text-xs font-semibold text-slate-700 flex justify-between">
                       <span>Aporte Mensal (R$)</span>
-                      <span className="font-mono text-slate-400 text-[11px]">Todo mês</span>
+                      <span className="font-mono text-slate-500 text-[11px]">Todo mês</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-bold">R$</span>
+                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold" aria-hidden="true">R$</span>
                       <input
+                        id="aporte-mensal"
                         type="text"
                         inputMode="numeric"
                         value={aporteMensalStr}
@@ -589,12 +674,14 @@ export default function CalculatorPage({
                       />
                     </div>
                     <input
+                      id="aporte-mensal-range"
                       type="range"
                       min="0"
                       max="20000"
                       step="100"
                       value={aporteMensalNum}
                       onChange={(e) => setAporteMensalStr(formatMilhar(e.target.value))}
+                      aria-label="Ajustar aporte mensal"
                       className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#800020] mt-1"
                     />
                   </div>
@@ -602,8 +689,9 @@ export default function CalculatorPage({
                   {/* Campo: Tempo (Anos/Meses) */}
                   <div className="grid grid-cols-5 gap-2">
                     <div className="col-span-3 flex flex-col gap-1.5">
-                      <label className="text-xs font-semibold text-slate-700">Período</label>
+                      <label htmlFor="tempo-periodo" className="text-xs font-semibold text-slate-700">Período</label>
                       <input
+                        id="tempo-periodo"
                         type="number"
                         value={tempo || ''}
                         onChange={(e) => setTempo(Math.min(600, Math.max(0, parseInt(e.target.value) || 0)))}
@@ -612,8 +700,9 @@ export default function CalculatorPage({
                       />
                     </div>
                     <div className="col-span-2 flex flex-col gap-1.5">
-                      <label className="text-xs font-semibold text-slate-700">Unidade</label>
+                      <label htmlFor="tempo-unidade" className="text-xs font-semibold text-slate-700">Unidade</label>
                       <select
+                        id="tempo-unidade"
                         value={tempoUnidade}
                         onChange={(e) => setTempoUnidade(e.target.value as TempoUnidade)}
                         className="w-full py-2 px-1 bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl focus:outline-hidden focus:border-[#800020] cursor-pointer"
@@ -628,7 +717,7 @@ export default function CalculatorPage({
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-slate-700 flex justify-between">
                       <span>Capitalização da Taxa</span>
-                      <span className="text-[10px] text-slate-400 font-mono">Regra de Cálculo</span>
+                      <span className="text-[10px] text-slate-500 font-mono">Regra de Cálculo</span>
                     </label>
                     <div className="grid grid-cols-2 gap-1 bg-slate-100/70 p-1 rounded-xl">
                       <button
@@ -637,7 +726,7 @@ export default function CalculatorPage({
                         className={`text-[10px] py-1 font-bold rounded-lg transition-all cursor-pointer text-center ${
                           taxaPeriodo === 'anual'
                             ? 'bg-white text-[#800020] shadow-xs'
-                            : 'text-slate-500 hover:text-slate-700'
+                            : 'text-slate-600 hover:text-slate-800'
                         }`}
                       >
                         Ao Ano (% a.a.)
@@ -648,7 +737,7 @@ export default function CalculatorPage({
                         className={`text-[10px] py-1 font-bold rounded-lg transition-all cursor-pointer text-center ${
                           taxaPeriodo === 'mensal'
                             ? 'bg-white text-[#800020] shadow-xs'
-                            : 'text-slate-500 hover:text-slate-700'
+                            : 'text-slate-600 hover:text-slate-800'
                         }`}
                       >
                         Ao Mês (% a.m.)
@@ -660,7 +749,7 @@ export default function CalculatorPage({
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-slate-700 flex justify-between">
                       <span>Taxa de Juros ({taxaPeriodo === 'anual' ? 'Anual' : 'Mensal'})</span>
-                      <span className="text-[10px] text-slate-400 font-mono">Taxas 2026</span>
+                      <span className="text-[10px] text-slate-500 font-mono">Taxas 2026</span>
                     </label>
                     
                     <div className="grid grid-cols-2 gap-1.5 mb-2">
@@ -714,7 +803,7 @@ export default function CalculatorPage({
                     </div>
 
                     <div className="relative">
-                      <span className="absolute right-3.5 top-2 ml-1 text-xs text-slate-400 font-bold">
+                      <span className="absolute right-3.5 top-2 ml-1 text-xs text-slate-500 font-bold">
                         {taxaPeriodo === 'anual' ? '% a.a.' : '% a.m.'}
                       </span>
                       <input
@@ -725,7 +814,7 @@ export default function CalculatorPage({
                         onChange={(e) => handleTaxaAnualChange(Math.max(0, parseFloat(e.target.value) || 0))}
                         className={`w-full pl-4 pr-14 py-2 text-sm font-semibold rounded-xl focus:outline-hidden transition-all ${
                           taxaTipo !== 'manual'
-                            ? 'bg-slate-100 text-slate-400 border border-slate-250 cursor-not-allowed'
+                            ? 'bg-slate-100 text-slate-500 border border-slate-250 cursor-not-allowed'
                             : 'bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900'
                         }`}
                         placeholder="12.00"
@@ -735,7 +824,7 @@ export default function CalculatorPage({
 
                   {/* Informação Resumo da Taxa Composta */}
                   <div className="bg-slate-50/75 border border-slate-100 rounded-xl p-3 flex gap-2 items-start text-[11px]">
-                    <Info className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+                    <Info className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
                     <div className="text-slate-500 font-sans leading-tight">
                       A taxa {taxaPeriodo === 'anual' ? 'anual' : 'mensal'} de <span className="font-semibold text-slate-700">{taxaAnual.toFixed(2)}%</span> equivale a{' '}
                       <span className="font-semibold text-slate-800">
@@ -765,7 +854,7 @@ export default function CalculatorPage({
                       <span>Salário Bruto CLT (R$)</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-bold">R$</span>
+                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -781,7 +870,7 @@ export default function CalculatorPage({
                   <div className="flex flex-col gap-1.5 select-none">
                     <label className="text-xs font-semibold text-slate-700">VR/VA Mensal (R$)</label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-bold">R$</span>
+                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -797,7 +886,7 @@ export default function CalculatorPage({
                   <div className="flex flex-col gap-1.5 select-none">
                     <label className="text-xs font-semibold text-slate-700">Plano de Saúde (R$)</label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-bold">R$</span>
+                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -813,7 +902,7 @@ export default function CalculatorPage({
                   <div className="flex flex-col gap-1.5 select-none">
                     <label className="text-xs font-semibold text-slate-700">Outros Benefícios (R$)</label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-bold">R$</span>
+                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -836,34 +925,37 @@ export default function CalculatorPage({
                     </h2>
                   </div>
 
-                  {/* Idade Atual */}
                   <div className="flex flex-col gap-1.5">
-                    <div className="flex justify-between text-xs font-semibold text-slate-700">
+                    <label htmlFor="aposentadoria-idade-atual" className="flex justify-between text-xs font-semibold text-slate-700">
                       <span>Idade Atual</span>
                       <span className="text-[#800020] font-bold">{aposentadoriaIdadeAtual} anos</span>
-                    </div>
+                    </label>
                     <input
+                      id="aposentadoria-idade-atual"
                       type="range"
                       min="18"
                       max="85"
                       value={aposentadoriaIdadeAtual}
                       onChange={(e) => setAposentadoriaIdadeAtual(parseInt(e.target.value))}
+                      aria-label="Idade atual"
                       className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#800020]"
                     />
                   </div>
 
                   {/* Idade Alvo */}
                   <div className="flex flex-col gap-1.5">
-                    <div className="flex justify-between text-xs font-semibold text-slate-700">
+                    <label htmlFor="aposentadoria-idade-alvo" className="flex justify-between text-xs font-semibold text-slate-700">
                       <span>Idade Alvo</span>
                       <span className="text-[#800020] font-bold">{aposentadoriaIdadeAlvo} anos</span>
-                    </div>
+                    </label>
                     <input
+                      id="aposentadoria-idade-alvo"
                       type="range"
                       min={Math.max(40, aposentadoriaIdadeAtual + 1)}
                       max="100"
                       value={aposentadoriaIdadeAlvo}
                       onChange={(e) => setAposentadoriaIdadeAlvo(parseInt(e.target.value))}
+                      aria-label="Idade alvo para aposentadoria"
                       className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#800020]"
                     />
                   </div>
@@ -872,7 +964,7 @@ export default function CalculatorPage({
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-slate-700">Renda Desejada (R$/mês)</label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-bold">R$</span>
+                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -888,7 +980,7 @@ export default function CalculatorPage({
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-slate-700">Patrimônio Atual (R$)</label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-bold">R$</span>
+                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -915,7 +1007,7 @@ export default function CalculatorPage({
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-slate-700">Salário Bruto (R$)</label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-bold">R$</span>
+                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -993,7 +1085,7 @@ export default function CalculatorPage({
               <div className="grid grid-cols-3 gap-1.5 text-center text-[10px] font-mono border-b border-slate-50 pb-3">
                 {PLACAR_CODES.map((code) => (
                   <div key={code} className="bg-slate-50 p-1.5 rounded-lg border border-slate-100">
-                    <div className="text-slate-400 font-sans">{code}</div>
+                    <div className="text-slate-500 font-sans">{code}</div>
                     <div className="font-extrabold text-slate-800">
                       {cotasBRL[code] ? formatRateBRL(cotasBRL[code], code) : '—'}
                     </div>
@@ -1011,18 +1103,19 @@ export default function CalculatorPage({
                   <> Usando cotações de referência.</>
                 )}
                 {exchangeStatus === 'cached' && exchangeSourceDate ? (
-                  <span className="block text-[8px] text-slate-400 mt-0.5">Referência de mercado: {exchangeSourceDate}</span>
+                  <span className="block text-[8px] text-slate-500 mt-0.5">Referência de mercado: {exchangeSourceDate}</span>
                 ) : null}
               </p>
 
               {/* Input Valor para Conversão */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-slate-600">Valor a Converter</label>
+                <label htmlFor="conversor-valor" className="text-xs font-semibold text-slate-600">Valor a Converter</label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold font-mono">
+                  <span className="absolute left-3.5 top-2.5 text-xs text-slate-600 font-bold font-mono" aria-hidden="true">
                     {deMoeda}
                   </span>
                   <input
+                    id="conversor-valor"
                     type="number"
                     value={conversorValor || ''}
                     onChange={(e) => setConversorValor(Math.max(0, parseFloat(e.target.value) || 0))}
@@ -1068,7 +1161,7 @@ export default function CalculatorPage({
 
                 </div>
 
-                <div className="text-[9px] text-center text-slate-400 font-medium">
+                <div className="text-[9px] text-center text-slate-500 font-medium">
                   Conversão cruzada instantânea de <span className="font-bold text-slate-500">[{deMoeda}]</span> para <span className="font-bold text-slate-500">[{paraMoeda}]</span>
                 </div>
               </div>
@@ -1128,7 +1221,7 @@ export default function CalculatorPage({
                     </div>
 
                     <div>
-                      <span className={`text-[10px] font-bold tracking-wider uppercase block ${isHighlight ? 'text-white/70' : 'text-slate-400'}`}>
+                      <span className={`text-[10px] font-bold tracking-wider uppercase block ${isHighlight ? 'text-white/90' : 'text-slate-500'}`}>
                         {card.titulo}
                       </span>
                       <h3 className={`font-extrabold text-lg sm:text-xl lg:text-2xl tracking-tight mt-1.5 font-mono break-currency ${isHighlight ? 'text-white' : 'text-slate-800'}`}>
@@ -1154,7 +1247,7 @@ export default function CalculatorPage({
               <div className="bg-gradient-to-r from-rose-50/50 to-amber-50/50 border border-amber-100/50 rounded-2xl p-5 shadow-xs grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex gap-4 items-start">
                 <div className="p-2 bg-rose-100 text-[#800020] rounded-xl font-bold tracking-tight text-center shrink-0 min-w-[70px]">
-                  <span className="block text-[9px] uppercase font-mono leading-none text-slate-500">IPCA Meta</span>
+                  <span className="block text-[9px] uppercase font-mono leading-none text-slate-600">IPCA Meta</span>
                   <span className="font-extrabold text-base leading-none mt-1 text-[#800020] block">{ipcaRate.toFixed(2)}%</span>
                 </div>
                 <div>
@@ -1167,7 +1260,7 @@ export default function CalculatorPage({
 
               <div className="flex gap-4 items-start border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-5">
                 <div className="p-2 bg-amber-100 text-orange-700 rounded-xl font-bold tracking-tight text-center shrink-0 min-w-[70px]">
-                  <span className="block text-[9px] uppercase font-mono leading-none text-slate-500">Corrosão</span>
+                  <span className="block text-[9px] uppercase font-mono leading-none text-slate-600">Corrosão</span>
                   <span className="font-extrabold text-base leading-none mt-1 text-orange-700 block">
                     {totais.valorBrutoUser > 0 ? ((totais.desvalorizacaoInflacao / totais.valorBrutoUser) * 100).toFixed(0) : 0}%
                   </span>
@@ -1198,7 +1291,7 @@ export default function CalculatorPage({
               {/* Comparativo vs Poupança */}
               <div className="bg-white rounded-2xl p-5 border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100">
                     <span className="font-extrabold text-xs">%</span>
                   </div>
                   <div>
@@ -1208,11 +1301,11 @@ export default function CalculatorPage({
                 </div>
 
                 <div className="text-right shrink-0">
-                  <div className={`font-mono text-sm font-extrabold ${totais.ganhoAdicionalPoupanca >= 0 ? 'text-emerald-600' : 'text-rose-700'}`}>
+                  <div className={`font-mono text-sm font-extrabold ${totais.ganhoAdicionalPoupanca >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                     {totais.ganhoAdicionalPoupanca >= 0 ? '+' : ''}
                     {formatBRL(totais.ganhoAdicionalPoupanca)}
                   </div>
-                  <div className="text-[10px] text-slate-400 font-medium">acumulados</div>
+                  <div className="text-[10px] text-slate-500 font-medium">acumulados</div>
                 </div>
               </div>
 
@@ -1229,11 +1322,11 @@ export default function CalculatorPage({
                 </div>
 
                 <div className="text-right shrink-0">
-                  <div className={`font-mono text-sm font-extrabold ${totais.ganhoAdicionalSelic >= 0 ? 'text-emerald-600' : 'text-slate-500'}`}>
+                  <div className={`font-mono text-sm font-extrabold ${totais.ganhoAdicionalSelic >= 0 ? 'text-emerald-700' : 'text-slate-500'}`}>
                     {totais.ganhoAdicionalSelic >= 0 ? '+' : ''}
                     {formatBRL(totais.ganhoAdicionalSelic)}
                   </div>
-                  <div className="text-[10px] text-slate-400 font-medium">acumulados</div>
+                  <div className="text-[10px] text-slate-500 font-medium">acumulados</div>
                 </div>
               </div>
 
@@ -1437,7 +1530,7 @@ export default function CalculatorPage({
 
                       <div className="mt-4 flex flex-col gap-3.5 text-xs">
                         <div className="bg-slate-50 border border-slate-100 rounded-xl p-3.5 font-sans">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase block">Meta Patrimonial no Dia Zero</span>
+                          <span className="text-[10px] text-slate-500 font-bold uppercase block">Meta Patrimonial no Dia Zero</span>
                           <span className="font-mono text-lg font-black text-slate-900 block mt-1">
                             {formatBRL(aposentadoriaData.patrimonioNecessario)}
                           </span>
@@ -1494,7 +1587,7 @@ export default function CalculatorPage({
                       </p>
                     </div>
                     <div className="text-right shrink-0">
-                      <span className="text-[10px] text-slate-400 block font-mono">REGIME</span>
+                      <span className="text-[10px] text-slate-500 block font-mono">REGIME</span>
                       <span className="font-bold text-[10px] text-[#800020] uppercase bg-rose-50 px-2 py-0.5 rounded border border-rose-100 mt-1 inline-block font-sans">
                         {rescisaoData.motivo === 'sem_justa' ? 'Sem Justa Causa (Empregador)' : 'Pedido de Demissão'}
                       </span>
@@ -1505,7 +1598,7 @@ export default function CalculatorPage({
                     <div className="table-scroll">
                       <table className="w-full text-left text-xs border-collapse font-sans">
                         <thead>
-                          <tr className="border-b border-slate-100 text-slate-400 uppercase tracking-widest text-[9px] font-bold">
+                          <tr className="border-b border-slate-100 text-slate-500 uppercase tracking-widest text-[9px] font-bold">
                             <th className="py-2.5">Detalhamento dos Direitos Rescisórios</th>
                             <th className="py-2.5 text-right">Cálculo de Base</th>
                             <th className="py-2.5 text-right text-slate-700">Valor Estimado</th>
@@ -1585,17 +1678,20 @@ export default function CalculatorPage({
 
           </div>
 
+            </div>
+          </div>
         </div>
         </div>
-        </section>
 
-        <ToolSeoContent content={toolContent} />
+        <Suspense fallback={null}>
+          <ToolSeoContent content={toolContent} />
+        </Suspense>
       </main>
 
       <AdSlotFooter />
 
       {/* 5. Rodapé Institucional Minimalista */}
-      <footer className="bg-slate-900 text-slate-400 py-10 px-6 md:px-12 border-t border-slate-800 text-xs text-center mt-auto" role="contentinfo">
+      <footer className="bg-slate-900 text-slate-300 py-10 px-6 md:px-12 border-t border-slate-800 text-xs text-center mt-auto" role="contentinfo">
         <div className="max-w-7xl mx-auto w-full flex flex-col items-center gap-6">
           
           {/* Logo do footer */}
@@ -1604,43 +1700,43 @@ export default function CalculatorPage({
               <span className="text-white font-bold text-xs">%</span>
             </div>
             <span className="font-bold text-sm text-slate-100 tracking-tight">
-              calculo<span className="text-[#bf1e44]">juroscompostos</span>.com.br
+              calculo<span className="text-rose-400">juroscompostos</span>.com.br
             </span>
           </div>
 
           {/* Links discretos */}
-          <div className="flex flex-wrap justify-center gap-6 text-slate-500 font-medium tracking-wide">
+          <div className="flex flex-wrap justify-center gap-6 text-slate-300 font-medium tracking-wide">
             <Link to={ROUTES.termos} className="hover:text-white transition-colors">Termos de Uso</Link>
-            <span className="text-slate-700 hidden sm:inline">|</span>
+            <span className="text-slate-600 hidden sm:inline">|</span>
             <Link to={ROUTES.privacidade} className="hover:text-white transition-colors">Política de Privacidade</Link>
-            <span className="text-slate-700 hidden sm:inline">|</span>
+            <span className="text-slate-600 hidden sm:inline">|</span>
             <Link to={ROUTES.sobre} className="hover:text-white transition-colors">Sobre</Link>
-            <span className="text-slate-700 hidden sm:inline">|</span>
+            <span className="text-slate-600 hidden sm:inline">|</span>
             <Link to={ROUTES.blog} className="hover:text-white transition-colors">Blog</Link>
-            <span className="text-slate-700 hidden sm:inline">|</span>
+            <span className="text-slate-600 hidden sm:inline">|</span>
             <Link to={ROUTES.cookies} className="hover:text-white transition-colors">Cookies</Link>
-            <span className="text-slate-700 hidden sm:inline">|</span>
+            <span className="text-slate-600 hidden sm:inline">|</span>
             <Link to={ROUTES.isencao} className="hover:text-white transition-colors">Isenção</Link>
           </div>
 
-          <nav className="flex flex-wrap justify-center gap-3 text-[10px] text-slate-600" aria-label="Categorias de conteúdo">
-            <Link to={ROUTES.categoria('investimentos')} className="hover:text-slate-300">Investimentos</Link>
-            <span className="text-slate-700">·</span>
-            <Link to={ROUTES.categoria('financas-pessoais')} className="hover:text-slate-300">Finanças Pessoais</Link>
-            <span className="text-slate-700">·</span>
-            <Link to={ROUTES.categoria('aposentadoria')} className="hover:text-slate-300">Aposentadoria</Link>
-            <span className="text-slate-700">·</span>
-            <Link to={ROUTES.categoria('salario-clt')} className="hover:text-slate-300">Salário e CLT</Link>
-            <span className="text-slate-700">·</span>
-            <Link to={ROUTES.categoria('empreendedorismo')} className="hover:text-slate-300">Empreendedorismo</Link>
+          <nav className="flex flex-wrap justify-center gap-3 text-[10px] text-slate-300" aria-label="Categorias de conteúdo">
+            <Link to={ROUTES.categoria('investimentos')} className="hover:text-white">Investimentos</Link>
+            <span className="text-slate-600">·</span>
+            <Link to={ROUTES.categoria('financas-pessoais')} className="hover:text-white">Finanças Pessoais</Link>
+            <span className="text-slate-600">·</span>
+            <Link to={ROUTES.categoria('aposentadoria')} className="hover:text-white">Aposentadoria</Link>
+            <span className="text-slate-600">·</span>
+            <Link to={ROUTES.categoria('salario-clt')} className="hover:text-white">Salário e CLT</Link>
+            <span className="text-slate-600">·</span>
+            <Link to={ROUTES.categoria('empreendedorismo')} className="hover:text-white">Empreendedorismo</Link>
           </nav>
 
           {/* Aviso Legal Mandatório */}
-          <p className="max-w-3xl text-[11px] text-slate-500 leading-relaxed font-sans mt-2">
+          <p className="max-w-3xl text-[11px] text-slate-300 leading-relaxed font-sans mt-2">
             As taxas exibidas são de caráter informativo com base em indicadores macroeconômicos. Retornos passados não garantem rendimentos futuros. Os resultados aqui providos são estimativas matemáticas com base em aportes regulares constantes, não representando de forma alguma assessoria ou recomendação individualizada de investimentos financeiros.
           </p>
 
-          <div className="text-[10px] text-slate-600 mt-2 font-mono">
+          <div className="text-[10px] text-slate-300 mt-2 font-mono">
             © 2026 {SITE_DOMAIN}. Todos os direitos reservados.
           </div>
 

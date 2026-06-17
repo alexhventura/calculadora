@@ -47,14 +47,14 @@ export default function CurrencySelect({ value, onChange, currencies, id, label 
       <button
         type="button"
         id={id}
-        aria-label={label}
+        aria-label={`${label}: ${selected ? `${selected.code} — ${selected.name}` : value}`}
         aria-expanded={open}
         aria-haspopup="listbox"
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between px-2.5 py-2 bg-slate-50 border border-slate-200 group-hover:border-amber-500 text-slate-700 text-[11px] font-bold rounded-xl transition-all min-h-[2.75rem] sm:min-h-8 sm:h-8"
       >
-        <span>{value}</span>
-        <span className="text-[8px] text-slate-400">▼</span>
+        <span aria-hidden="true">{value}</span>
+        <span className="text-[8px] text-slate-500" aria-hidden="true">▼</span>
       </button>
 
       {open && (
@@ -76,7 +76,7 @@ export default function CurrencySelect({ value, onChange, currencies, id, label 
           </div>
           <ul className="max-h-48 overflow-y-auto overscroll-contain">
             {filtered.length === 0 ? (
-              <li className="px-2.5 py-2 text-[10px] text-slate-400 text-center">Nenhuma moeda encontrada</li>
+              <li className="px-2.5 py-2 text-[10px] text-slate-500 text-center">Nenhuma moeda encontrada</li>
             ) : (
               filtered.map((c) => (
                 <li key={c.code}>
@@ -94,7 +94,7 @@ export default function CurrencySelect({ value, onChange, currencies, id, label 
                     }`}
                   >
                     <span className="font-bold">{c.code}</span>
-                    <span className="text-slate-400 ml-1">— {c.name}</span>
+                    <span className="text-slate-500 ml-1">— {c.name}</span>
                   </button>
                 </li>
               ))

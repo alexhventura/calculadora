@@ -143,7 +143,7 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h3 className="font-semibold text-slate-900 text-lg">Evolução Patrimonial</h3>
-          <p className="text-xs text-slate-400">Comparação interativa do crescimento ao longo do tempo</p>
+          <p className="text-xs text-slate-500">Comparação interativa do crescimento ao longo do tempo</p>
         </div>
 
         {/* Legendas Interativas */}
@@ -391,7 +391,7 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
           >
             <div className="font-bold text-slate-900 border-b border-slate-100 pb-1 mb-2 flex justify-between">
               <span>{hoveredData.label}</span>
-              <span className="font-mono font-normal text-slate-400">({hoveredData.tempoExibicao})</span>
+              <span className="font-mono font-normal text-slate-500">({hoveredData.tempoExibicao})</span>
             </div>
             
             <div className="space-y-1.5 font-mono">
@@ -441,7 +441,7 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
 
       {/* Roda do rodapé do gráfico com explicações Rápidas */}
       <div className="border-t border-slate-50 mt-4 pt-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-        <div className="text-[10px] text-slate-400 max-w-md">
+        <div className="text-[10px] text-slate-500 max-w-md">
           * Arraste o cursor sobre as linhas para inspecionar e comparar os valores em qualquer mês da evolução patrimonial simulada.
         </div>
         <div className="flex items-center gap-2.5 text-[11px] font-mono font-medium text-slate-600">

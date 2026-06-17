@@ -101,7 +101,7 @@ export default function TabelaMensal({ registros }: TabelaMensalProps) {
             <Calendar className="w-5 h-5 text-[#800020]" />
             Tabela Detalhada Mês a Mês
           </h3>
-          <p className="text-xs text-slate-400">Analise os fluxos periódicos de rendimento e aportes</p>
+          <p className="text-xs text-slate-500">Analise os fluxos periódicos de rendimento e aportes</p>
         </div>
 
         {/* Controles de Filtros */}
@@ -169,7 +169,7 @@ export default function TabelaMensal({ registros }: TabelaMensalProps) {
                 return (
                   <tr key={reg.mesIndex} className="hover:bg-slate-50/75 transition-colors">
                     <td className="py-2.5 px-4 font-sans font-medium text-slate-800">
-                      Mês {reg.mesIndex} <span className="text-slate-400 text-[10px] ml-1">({reg.tempoExibicao})</span>
+                      Mês {reg.mesIndex} <span className="text-slate-500 text-[10px] ml-1">({reg.tempoExibicao})</span>
                     </td>
                     <td className="py-2.5 px-4 text-slate-600 font-medium">
                       {formatCurrency(reg.totalInvestido)}
@@ -183,7 +183,7 @@ export default function TabelaMensal({ registros }: TabelaMensalProps) {
                     <td className="py-2.5 px-4 text-[#800020] font-bold text-right bg-rose-50/20 border-x border-rose-50/50">
                       {formatCurrency(reg.saldoUser)}
                     </td>
-                    <td className="py-2.5 px-4 text-slate-400 text-right">
+                    <td className="py-2.5 px-4 text-slate-500 text-right">
                       {formatCurrency(reg.saldoPoupanca)}
                     </td>
                     <td className="py-2.5 px-4 text-slate-600 text-right font-medium">
@@ -194,7 +194,7 @@ export default function TabelaMensal({ registros }: TabelaMensalProps) {
               })
             ) : (
               <tr>
-                <td colSpan={7} className="py-8 text-center font-sans text-slate-400">
+                <td colSpan={7} className="py-8 text-center font-sans text-slate-500">
                   Nenhum registro encontrado para este filtro.
                 </td>
               </tr>

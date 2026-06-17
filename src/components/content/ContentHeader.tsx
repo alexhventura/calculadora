@@ -9,7 +9,7 @@ interface ContentHeaderProps {
 export default function ContentHeader({ h1, intro, author, updatedAt, readTimeMinutes }: ContentHeaderProps) {
   return (
     <header className="mb-8">
-      <div className="flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-3">
+      <div className="flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-3">
         <time dateTime={updatedAt}>
           Atualizado em {new Date(updatedAt).toLocaleDateString('pt-BR')}
         </time>
