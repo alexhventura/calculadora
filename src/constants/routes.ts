@@ -49,17 +49,12 @@ export function toolPath(tool: ActiveTool): string {
 
 export const ALL_INDEXABLE_PATHS = [
   ROUTES.home,
-  ROUTES.jurosCompostos,
   ROUTES.calculadoraCdi,
   ROUTES.calculadoraIpca,
   ROUTES.cltPj,
   ROUTES.aposentadoria,
   ROUTES.rescisao,
   ROUTES.conversorMoedas,
-  ROUTES.calculadora(TOOL_SLUGS.juros),
-  ROUTES.calculadora(TOOL_SLUGS['clt-pj']),
-  ROUTES.calculadora(TOOL_SLUGS.aposentadoria),
-  ROUTES.calculadora(TOOL_SLUGS.rescisao),
   ROUTES.blog,
   ROUTES.sobre,
   ROUTES.privacidade,

@@ -22,6 +22,9 @@ import {
 } from '../utils/finance';
 import { AdSlotTop, AdSlotFooter, AdSlotInline } from '../components/monetization';
 import SkipLink from '../components/layout/SkipLink';
+import SiteBrand from '../components/layout/SiteBrand';
+import MainNav from '../components/layout/MainNav';
+import SiteFooter from '../components/layout/SiteFooter';
 import PageMeta from '../components/seo/PageMeta';
 import StructuredData from '../components/seo/StructuredData';
 import Breadcrumbs from '../components/layout/Breadcrumbs';
@@ -143,6 +146,7 @@ export default function CalculatorPage({
   const navigateToTool = useCallback((tool: ActiveTool) => {
     setActiveTool(tool);
     navigate(toolPath(tool));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [navigate]);
 
   const activeToolMeta = TOOL_SELECTOR_META[activeTool];
@@ -339,25 +343,14 @@ export default function CalculatorPage({
       />
       <SkipLink />
       {/* 1. Header Fixo & Identidade Refinada - Header Ultra-Foco */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 py-4 px-6 md:px-12 flex justify-between items-center shadow-xs" role="banner">
-        <div className="max-w-7xl mx-auto w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          
-          {/* Símbolo da Marca */}
-          <div className="flex items-center gap-2.5" aria-label={`${SITE_DOMAIN} — Finanças Inteligentes`}>
-            <div className="w-9 h-9 rounded-full bg-[#800020] flex items-center justify-center shadow-md">
-              <span className="text-white font-extrabold text-base">%</span>
-            </div>
-            <div>
-              <span className="font-extrabold text-xl tracking-tight text-slate-900">
-                calculo<span className="text-[#800020]">juroscompostos</span>.com.br
-              </span>
-              <span className="text-[10px] font-semibold text-slate-500 block -mt-1 tracking-wider uppercase font-sans">Finanças Inteligentes</span>
-            </div>
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 py-4 px-6 md:px-12 shadow-xs" role="banner">
+        <div className="max-w-7xl mx-auto w-full flex flex-col gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <SiteBrand />
+            <MainNav current="calculadoras" />
           </div>
-
-          {/* Painel compact real-time cotações do dia */}
           <div
-            className="flex items-center gap-2 text-xs font-mono text-slate-500 bg-slate-50 border border-slate-100 px-3 py-2 rounded-xl sm:rounded-full select-none justify-center w-full sm:w-auto min-w-0 overflow-hidden"
+            className="flex items-center gap-2 text-xs font-mono text-slate-500 bg-slate-50 border border-slate-100 px-3 py-2 rounded-xl sm:rounded-full select-none justify-center w-full sm:w-auto sm:ml-auto min-w-0 overflow-hidden"
             role="status"
             aria-live="polite"
             aria-label="Cotações do dia"
@@ -377,7 +370,6 @@ export default function CalculatorPage({
               </span>
             </div>
           </div>
-
         </div>
       </header>
 
@@ -1511,58 +1503,7 @@ export default function CalculatorPage({
 
       <AdSlotFooter />
 
-      {/* 5. Rodapé Institucional Minimalista */}
-      <footer className="bg-slate-900 text-slate-300 py-10 px-6 md:px-12 border-t border-slate-800 text-xs text-center mt-auto" role="contentinfo">
-        <div className="max-w-7xl mx-auto w-full flex flex-col items-center gap-6">
-          
-          {/* Logo do footer */}
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
-              <span className="text-white font-bold text-xs">%</span>
-            </div>
-            <span className="font-bold text-sm text-slate-100 tracking-tight">
-              calculo<span className="text-rose-400">juroscompostos</span>.com.br
-            </span>
-          </div>
-
-          {/* Links discretos */}
-          <div className="flex flex-wrap justify-center gap-6 text-slate-300 font-medium tracking-wide">
-            <Link to={ROUTES.termos} className="hover:text-white transition-colors">Termos de Uso</Link>
-            <span className="text-slate-600 hidden sm:inline">|</span>
-            <Link to={ROUTES.privacidade} className="hover:text-white transition-colors">Política de Privacidade</Link>
-            <span className="text-slate-600 hidden sm:inline">|</span>
-            <Link to={ROUTES.sobre} className="hover:text-white transition-colors">Sobre</Link>
-            <span className="text-slate-600 hidden sm:inline">|</span>
-            <Link to={ROUTES.blog} className="hover:text-white transition-colors">Blog</Link>
-            <span className="text-slate-600 hidden sm:inline">|</span>
-            <Link to={ROUTES.cookies} className="hover:text-white transition-colors">Cookies</Link>
-            <span className="text-slate-600 hidden sm:inline">|</span>
-            <Link to={ROUTES.isencao} className="hover:text-white transition-colors">Isenção</Link>
-          </div>
-
-          <nav className="flex flex-wrap justify-center gap-3 text-[10px] text-slate-300" aria-label="Categorias de conteúdo">
-            <Link to={ROUTES.categoria('investimentos')} className="hover:text-white">Investimentos</Link>
-            <span className="text-slate-600">·</span>
-            <Link to={ROUTES.categoria('financas-pessoais')} className="hover:text-white">Finanças Pessoais</Link>
-            <span className="text-slate-600">·</span>
-            <Link to={ROUTES.categoria('aposentadoria')} className="hover:text-white">Aposentadoria</Link>
-            <span className="text-slate-600">·</span>
-            <Link to={ROUTES.categoria('salario-clt')} className="hover:text-white">Salário e CLT</Link>
-            <span className="text-slate-600">·</span>
-            <Link to={ROUTES.categoria('empreendedorismo')} className="hover:text-white">Empreendedorismo</Link>
-          </nav>
-
-          {/* Aviso Legal Mandatório */}
-          <p className="max-w-3xl text-[11px] text-slate-300 leading-relaxed font-sans mt-2">
-            As taxas exibidas são de caráter informativo com base em indicadores macroeconômicos. Retornos passados não garantem rendimentos futuros. Os resultados aqui providos são estimativas matemáticas com base em aportes regulares constantes, não representando de forma alguma assessoria ou recomendação individualizada de investimentos financeiros.
-          </p>
-
-          <div className="text-[10px] text-slate-300 mt-2 font-mono">
-            © 2026 {SITE_DOMAIN}. Todos os direitos reservados.
-          </div>
-
-        </div>
-      </footer>
+      <SiteFooter disclaimer="As taxas exibidas são de caráter informativo com base em indicadores macroeconômicos. Retornos passados não garantem rendimentos futuros. Os resultados aqui providos são estimativas matemáticas com base em aportes regulares constantes, não representando de forma alguma assessoria ou recomendação individualizada de investimentos financeiros." />
 
     </div>
   );

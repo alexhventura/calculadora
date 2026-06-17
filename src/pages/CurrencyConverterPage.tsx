@@ -5,10 +5,12 @@ import {
   TrendingUp,
   TrendingDown,
   RefreshCw,
-  Calculator,
   ArrowRight,
 } from 'lucide-react';
 import SkipLink from '../components/layout/SkipLink';
+import SiteBrand from '../components/layout/SiteBrand';
+import MainNav from '../components/layout/MainNav';
+import SiteFooter from '../components/layout/SiteFooter';
 import PageMeta from '../components/seo/PageMeta';
 import StructuredData from '../components/seo/StructuredData';
 import Breadcrumbs from '../components/layout/Breadcrumbs';
@@ -29,7 +31,7 @@ import {
 import { formatConvertedValue, formatExchangeTimestamp, formatRateBRL } from '../utils/formatExchange';
 import { conversorMoedasContent } from '../content/tools/conversor-moedas';
 import { ROUTES } from '../constants/routes';
-import { SITE_URL, SITE_DOMAIN } from '../constants/site';
+import { SITE_URL } from '../constants/site';
 
 const ToolSeoContent = lazy(() => import('../components/content/ToolSeoContent'));
 
@@ -139,28 +141,8 @@ export default function CurrencyConverterPage() {
         role="banner"
       >
         <div className="max-w-7xl mx-auto w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <Link to={ROUTES.home} className="flex items-center gap-2.5" aria-label={`${SITE_DOMAIN} — Início`}>
-            <div className="w-9 h-9 rounded-full bg-[#800020] flex items-center justify-center shadow-md">
-              <span className="text-white font-extrabold text-base">%</span>
-            </div>
-            <div>
-              <span className="font-extrabold text-xl tracking-tight text-slate-900">
-                calculo<span className="text-[#800020]">juroscompostos</span>.com.br
-              </span>
-              <span className="text-[10px] font-semibold text-slate-500 block -mt-1 tracking-wider uppercase">
-                Conversor de Moedas
-              </span>
-            </div>
-          </Link>
-          <nav className="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold text-slate-600">
-            <Link to={ROUTES.home} className="hover:text-[#800020] transition-colors flex items-center gap-1">
-              <Calculator className="w-3.5 h-3.5" aria-hidden="true" />
-              Calculadoras
-            </Link>
-            <span className="text-amber-700 font-bold" aria-current="page">
-              Conversor
-            </span>
-          </nav>
+          <SiteBrand tagline="Conversor de Moedas" />
+          <MainNav current="conversor" />
         </div>
       </header>
 
@@ -429,17 +411,7 @@ export default function CurrencyConverterPage() {
 
       <AdSlotFooter />
 
-      <footer
-        className="bg-slate-900 text-slate-300 py-10 px-6 md:px-12 border-t border-slate-800 text-xs text-center"
-        role="contentinfo"
-      >
-        <div className="max-w-7xl mx-auto w-full flex flex-col items-center gap-4">
-          <p className="text-[11px] text-slate-400 max-w-2xl">
-            Cotações indicativas. Não constitui oferta de câmbio ou recomendação de investimento.
-          </p>
-          <div className="text-[10px] text-slate-500 font-mono">© 2026 {SITE_DOMAIN}</div>
-        </div>
-      </footer>
+      <SiteFooter disclaimer="Cotações indicativas. Não constitui oferta de câmbio ou recomendação de investimento." />
     </div>
   );
 }

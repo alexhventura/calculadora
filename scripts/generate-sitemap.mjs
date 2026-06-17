@@ -5,11 +5,13 @@ import { INDEXABLE_PATHS, SITE_URL } from './routes.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const distDir = join(__dirname, '..', 'dist');
+const publicDir = join(__dirname, '..', 'public');
 
 function priorityFor(path) {
   if (path === '/') return '1.0';
-  if (path.startsWith('/juros-compostos') || path.startsWith('/calculadora-cdi')) return '0.95';
-  if (path.startsWith('/calculadora/')) return '0.85';
+  if (path.startsWith('/calculadora-cdi') || path.startsWith('/calculadora-ipca')) return '0.95';
+  if (path === '/clt-pj' || path === '/aposentadoria' || path === '/rescisao-trabalhista') return '0.9';
+  if (path === '/conversor-de-moedas') return '0.85';
   if (path.startsWith('/blog/')) return '0.8';
   if (path.startsWith('/categoria/')) return '0.75';
   if (path.includes('politica') || path.includes('termos') || path.includes('isencao')) return '0.5';
@@ -17,7 +19,7 @@ function priorityFor(path) {
 }
 
 function changefreqFor(path) {
-  if (path === '/' || path.startsWith('/calculadora')) return 'weekly';
+  if (path === '/' || path.startsWith('/clt-pj') || path.startsWith('/aposentadoria') || path.startsWith('/rescisao')) return 'weekly';
   if (path.startsWith('/blog') || path.startsWith('/categoria')) return 'monthly';
   if (path.includes('politica') || path.includes('termos') || path.includes('isencao')) return 'yearly';
   return 'monthly';
@@ -42,4 +44,5 @@ Sitemap: ${SITE_URL}/sitemap.xml
 
 writeFileSync(join(distDir, 'sitemap.xml'), sitemap, 'utf8');
 writeFileSync(join(distDir, 'robots.txt'), robots, 'utf8');
-console.log(`[sitemap] ${INDEXABLE_PATHS.length} URLs → dist/sitemap.xml`);
+writeFileSync(join(publicDir, 'sitemap.xml'), sitemap, 'utf8');
+console.log(`[sitemap] ${INDEXABLE_PATHS.length} URLs → dist/sitemap.xml + public/sitemap.xml`);

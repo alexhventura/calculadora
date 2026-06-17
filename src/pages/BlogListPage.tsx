@@ -38,6 +38,12 @@ export default function BlogListPage() {
       />
       <main id="conteudo-principal" className="max-w-4xl mx-auto w-full min-w-0 px-4 md:px-8 py-10 flex-1">
         <Breadcrumbs items={[{ label: 'Início', href: '/' }, { label: 'Blog' }]} />
+        <Link
+          to={ROUTES.home}
+          className="inline-flex text-sm font-semibold text-[#800020] hover:underline mb-4 -mt-2"
+        >
+          ← Voltar às calculadoras
+        </Link>
         <ContentHeader
           h1="Blog de Educação Financeira"
           intro="Guias práticos e aprofundados sobre investimentos, aposentadoria, trabalho e finanças pessoais — escritos para complementar nossas calculadoras e fortalecer sua autonomia financeira."

@@ -3,17 +3,12 @@ export const SITE_URL = 'https://calculojuroscompostos.com.br';
 
 export const INDEXABLE_PATHS = [
   '/',
-  '/juros-compostos',
   '/calculadora-cdi',
   '/calculadora-ipca',
   '/clt-pj',
   '/aposentadoria',
   '/rescisao-trabalhista',
   '/conversor-de-moedas',
-  '/calculadora/juros-compostos',
-  '/calculadora/clt-vs-pj',
-  '/calculadora/aposentadoria',
-  '/calculadora/rescisao-trabalhista',
   '/blog',
   '/blog/como-calcular-juros-compostos',
   '/blog/quanto-investir-para-se-aposentar',

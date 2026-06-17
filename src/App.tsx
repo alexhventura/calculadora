@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import SiteLayout from './components/layout/SiteLayout';
+import ScrollToTop from './components/layout/ScrollToTop';
 import CalculatorPage from './pages/CalculatorPage';
 import { ROUTES } from './constants/routes';
 import type { ActiveTool } from './utils/calculations/toolCalculations';
@@ -34,6 +35,7 @@ function Calc({ tool, seoVariant, initialTaxaTipo }: CalcProps) {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path={ROUTES.home} element={<Calc tool="juros" />} />
         <Route path={ROUTES.jurosCompostos} element={<Calc tool="juros" />} />

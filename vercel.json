@@ -4,6 +4,7 @@
   "installCommand": "npm install",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "redirects": [
+    { "source": "/juros-compostos", "destination": "/", "permanent": true },
     { "source": "/contato", "destination": "/sobre", "permanent": true },
     { "source": "/calculadora/juros-compostos", "destination": "/juros-compostos", "permanent": true },
     { "source": "/calculadora/clt-vs-pj", "destination": "/clt-pj", "permanent": true },
