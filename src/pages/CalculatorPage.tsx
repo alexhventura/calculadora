@@ -23,7 +23,7 @@ import {
   convertAnualParaMensal,
   convertMensalParaAnual
 } from '../utils/finance';
-import AnuncioSlot from '../components/AnuncioSlot';
+import { AdSlotTop, AdSlotFooter, AdSlotSidebar, AdSlotInline } from '../components/monetization';
 import SkipLink from '../components/layout/SkipLink';
 import PageMeta from '../components/seo/PageMeta';
 import StructuredData from '../components/seo/StructuredData';
@@ -122,6 +122,13 @@ export default function CalculatorPage({
     setActiveTool(tool);
     navigate(toolPath(tool));
   }, [navigate]);
+
+  const activeBentoId = {
+    juros: 'bento_juros',
+    'clt-pj': 'bento_clt_pj',
+    rescisao: 'bento_rescisao',
+    aposentadoria: 'bento_aposentadoria',
+  }[activeTool];
 
   useEffect(() => {
     if (initialTool) {
@@ -357,10 +364,7 @@ export default function CalculatorPage({
         </div>
       </header>
 
-      {/* 2. Top Banner Ad Slot */}
-      <section className="py-4 px-4 bg-slate-100/50 border-b border-slate-100 flex justify-center">
-        <AnuncioSlot dimensao="728x90" />
-      </section>
+      <AdSlotTop />
 
       {/* 3. Área Principal do Conteúdo */}
       <main id="conteudo-principal" className="max-w-7xl mx-auto w-full min-w-0 px-4 md:px-8 lg:px-12 py-8 flex-1 flex flex-col gap-8">
@@ -372,17 +376,24 @@ export default function CalculatorPage({
             <h2 className="text-xl font-extrabold tracking-tight text-slate-900">Seletor de Ferramenta Financeira</h2>
             <p className="text-xs text-slate-500 font-medium">Selecione uma calculadora inteligente para realizar projeções, simulações e análise técnica imediata.</p>
           </div>
+
+          <div
+            id="active-tool-workspace"
+            className="rounded-2xl md:rounded-3xl bg-slate-50/80 border border-slate-200/60 shadow-xs p-3 sm:p-4 md:p-6 lg:p-8 flex flex-col gap-4 md:gap-6 scroll-mt-24"
+          >
           
           <div id="bento-selector" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4" role="tablist" aria-label="Seletor de ferramentas financeiras">
             
             {/* Tool 1: Juros Compostos */ /* @id bento_juros */}
             <button
               id="bento_juros"
+              role="tab"
+              aria-selected={activeTool === 'juros'}
               onClick={() => navigateToTool('juros')}
               className={`flex flex-col text-left p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden select-none h-full justify-between gap-3 min-h-[4.5rem] touch-target sm:min-h-0 ${
                 activeTool === 'juros'
-                  ? 'bg-white border-[#800020] shadow-md ring-2 ring-[#800020]/10'
-                  : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                  ? 'bg-white border-[#800020] shadow-md ring-2 ring-[#800020]/10 z-[1]'
+                  : 'bg-white/70 border-slate-200/80 hover:border-slate-300 hover:bg-white'
               }`}
             >
               <div className="flex items-center justify-between w-full">
@@ -404,11 +415,13 @@ export default function CalculatorPage({
             {/* Tool 2: CLT vs PJ */ /* @id bento_clt_pj */}
             <button
               id="bento_clt_pj"
+              role="tab"
+              aria-selected={activeTool === 'clt-pj'}
               onClick={() => navigateToTool('clt-pj')}
               className={`flex flex-col text-left p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden select-none h-full justify-between gap-3 min-h-[4.5rem] touch-target sm:min-h-0 ${
                 activeTool === 'clt-pj'
-                  ? 'bg-white border-[#800020] shadow-md ring-2 ring-[#800020]/10'
-                  : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                  ? 'bg-white border-[#800020] shadow-md ring-2 ring-[#800020]/10 z-[1]'
+                  : 'bg-white/70 border-slate-200/80 hover:border-slate-300 hover:bg-white'
               }`}
             >
               <div className="flex items-center justify-between w-full">
@@ -430,11 +443,13 @@ export default function CalculatorPage({
             {/* Tool 3: Rescisão Contratual */ /* @id bento_rescisao */}
             <button
               id="bento_rescisao"
+              role="tab"
+              aria-selected={activeTool === 'rescisao'}
               onClick={() => navigateToTool('rescisao')}
               className={`flex flex-col text-left p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden select-none h-full justify-between gap-3 min-h-[4.5rem] touch-target sm:min-h-0 ${
                 activeTool === 'rescisao'
-                  ? 'bg-white border-[#800020] shadow-md ring-2 ring-[#800020]/10'
-                  : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                  ? 'bg-white border-[#800020] shadow-md ring-2 ring-[#800020]/10 z-[1]'
+                  : 'bg-white/70 border-slate-200/80 hover:border-slate-300 hover:bg-white'
               }`}
             >
               <div className="flex items-center justify-between w-full">
@@ -456,11 +471,13 @@ export default function CalculatorPage({
             {/* Tool 4: Previdência & Aposentadoria */ /* @id bento_aposentadoria */}
             <button
               id="bento_aposentadoria"
+              role="tab"
+              aria-selected={activeTool === 'aposentadoria'}
               onClick={() => navigateToTool('aposentadoria')}
               className={`flex flex-col text-left p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden select-none h-full justify-between gap-3 min-h-[4.5rem] touch-target sm:min-h-0 ${
                 activeTool === 'aposentadoria'
-                  ? 'bg-white border-[#800020] shadow-md ring-2 ring-[#800020]/10'
-                  : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                  ? 'bg-white border-[#800020] shadow-md ring-2 ring-[#800020]/10 z-[1]'
+                  : 'bg-white/70 border-slate-200/80 hover:border-slate-300 hover:bg-white'
               }`}
             >
               <div className="flex items-center justify-between w-full">
@@ -480,10 +497,19 @@ export default function CalculatorPage({
             </button>
 
           </div>
-        </section>
+
+          <div
+            className="h-px w-full bg-slate-200/80 shrink-0"
+            aria-hidden="true"
+          />
 
         {/* Layout Altamente Flexível e Ordenável: Mobile-First Sequencial vs Desktop Grid */}
-        <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6 lg:gap-8 min-w-0">
+        <div
+          id={`tool-panel-${activeTool}`}
+          role="tabpanel"
+          aria-labelledby={activeBentoId}
+          className="flex flex-col lg:grid lg:grid-cols-4 gap-6 lg:gap-8 min-w-0 pt-1 md:pt-2"
+        >
           
           {/* LADO ESQUERDO (Width: 1/4) */}
           
@@ -1057,10 +1083,7 @@ export default function CalculatorPage({
 
             </div>
 
-            {/* CARD 3: AD VERTICAL DO LADO ESQUERDO */}
-            <div className="order-4 lg:col-span-1 lg:col-start-1 lg:row-start-3 h-fit flex justify-center">
-              <AnuncioSlot dimensao="300x250" className="w-full shadow-xs" />
-            </div>
+            <AdSlotSidebar className="w-full shadow-xs" />
 
 
           {/* LADO DIREITO (Width: 3/4) */}
@@ -1218,7 +1241,7 @@ export default function CalculatorPage({
             )}
 
             {/* AD BANNER HORIZONTAL NO MEIO DE CONTEÚDO */}
-            <AnuncioSlot dimensao="horizontal-flexible" className="w-full" />
+            <AdSlotInline className="w-full" />
 
             {/* TABELA DETALHADA MÊS A MÊS */}
             {activeTool === 'juros' && (
@@ -1342,7 +1365,7 @@ export default function CalculatorPage({
                 </div>
 
                 {/* AD BANNER HORIZONTAL NO MEIO DE CONTEÚDO */}
-                <AnuncioSlot dimensao="horizontal-flexible" className="w-full" />
+                <AdSlotInline className="w-full" />
 
                 {/* Parecer Técnico Analítico */}
                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-xs font-sans">
@@ -1434,7 +1457,7 @@ export default function CalculatorPage({
                 </div>
 
                 {/* AD BANNER HORIZONTAL NO MEIO DE CONTEÚDO */}
-                <AnuncioSlot dimensao="horizontal-flexible" className="w-full" />
+                <AdSlotInline className="w-full" />
 
                 {/* Plano de Ação Personalizado */}
                 <div className="bg-gradient-to-r from-emerald-50/50 to-teal-50/45 p-6 border border-emerald-100 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 font-sans">
@@ -1543,7 +1566,7 @@ export default function CalculatorPage({
                 </div>
 
                 {/* AD BANNER HORIZONTAL NO MEIO DE CONTEÚDO */}
-                <AnuncioSlot dimensao="horizontal-flexible" className="w-full" />
+                <AdSlotInline className="w-full" />
 
                 {/* Parecer Legal Prontuário */}
                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-xs font-sans">
@@ -1563,14 +1586,13 @@ export default function CalculatorPage({
           </div>
 
         </div>
+        </div>
+        </section>
 
         <ToolSeoContent content={toolContent} />
       </main>
 
-      {/* 4. Bottom Banner Ad Slot */}
-      <section className="py-6 px-4 bg-slate-100/50 border-t border-slate-100 flex justify-center">
-        <AnuncioSlot dimensao="728x90" />
-      </section>
+      <AdSlotFooter />
 
       {/* 5. Rodapé Institucional Minimalista */}
       <footer className="bg-slate-900 text-slate-400 py-10 px-6 md:px-12 border-t border-slate-800 text-xs text-center mt-auto" role="contentinfo">
