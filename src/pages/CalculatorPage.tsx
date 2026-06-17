@@ -379,7 +379,13 @@ export default function CalculatorPage({
       {/* 3. Área Principal do Conteúdo */}
       <main id="conteudo-principal" className="max-w-7xl mx-auto w-full min-w-0 px-4 md:px-8 lg:px-12 py-8 flex-1 flex flex-col gap-8">
         <Breadcrumbs items={[{ label: 'Início', href: '/' }, { label: toolContent.h1 }]} />
-        <h1 className="sr-only">{toolContent.h1}</h1>
+
+        <header className="flex flex-col gap-2">
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900">
+            {toolContent.h1}
+          </h1>
+          <p className="text-sm text-slate-600 leading-relaxed max-w-3xl">{toolContent.intro}</p>
+        </header>
 
         <CurrencyFeaturedCard />
 

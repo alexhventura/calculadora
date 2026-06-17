@@ -99,7 +99,7 @@ export default function CurrencyConverterPage() {
     const map = new Map(featured.map((q) => [q.code, q]));
     for (const code of POPULAR_CODES) {
       if (!map.has(code) && rates[code]) {
-        map.set(code, { code, rate: rates[code], pctChange: null, high: null, low: null });
+        map.set(code, { code, rate: rates[code], ask: null, pctChange: null, high: null, low: null });
       }
     }
     return map;

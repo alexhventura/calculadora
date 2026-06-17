@@ -1,233 +1,179 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowRightLeft, Coins, TrendingDown, TrendingUp } from 'lucide-react';
-import CurrencySelect from '../CurrencySelect';
+import { useState, useMemo, useEffect, useCallback, type KeyboardEvent, type MouseEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowRight, Coins } from 'lucide-react';
 import { useExchangeRates } from '../../hooks/useExchangeRates';
 import { fetchFeaturedQuotes, type FeaturedQuote } from '../../utils/currency/currencyHistory';
 import { converterMatrizMoedas } from '../../utils/finance';
 import {
-  buildCurrencyInfo,
-  DEFAULT_FROM,
-  DEFAULT_TO,
-} from '../../constants/currencies';
+  QUOTE_TYPES,
+  applyQuoteTypeToRates,
+  adjustRateForQuoteType,
+  type QuoteType,
+} from '../../constants/quoteTypes';
 import { formatConvertedValue, formatRateBRL } from '../../utils/formatExchange';
 import { ROUTES } from '../../constants/routes';
 
-interface FeaturedPair {
-  id: string;
-  label: string;
-  flag: string;
-  quoteCode: string;
-  crossTo?: string;
-}
-
-const FEATURED_PAIRS: FeaturedPair[] = [
-  { id: 'usd-brl', label: 'USD/BRL', flag: '🇺🇸🇧🇷', quoteCode: 'USD' },
-  { id: 'eur-brl', label: 'EUR/BRL', flag: '🇪🇺🇧🇷', quoteCode: 'EUR' },
-  { id: 'btc-brl', label: 'BTC/BRL', flag: '₿', quoteCode: 'BTC' },
-  { id: 'eur-usd', label: 'EUR/USD', flag: '🇪🇺🇺🇸', quoteCode: 'EUR', crossTo: 'USD' },
-];
-
-function pctBadge(pct: number | null) {
-  if (pct === null || !Number.isFinite(pct)) return null;
-  const up = pct >= 0;
-  const Icon = up ? TrendingUp : TrendingDown;
-  return (
-    <span
-      className={`inline-flex items-center gap-0.5 text-[10px] font-bold font-mono ${
-        up ? 'text-emerald-600' : 'text-rose-600'
-      }`}
-    >
-      <Icon className="w-3 h-3" aria-hidden="true" />
-      {up ? '+' : ''}
-      {pct.toFixed(2)}%
-    </span>
-  );
-}
+const PREVIEW_CODES = ['USD', 'EUR', 'BTC'] as const;
+const DEMO_FROM = 'USD';
+const DEMO_TO = 'BRL';
+const DEMO_AMOUNT = 1;
 
 export default function CurrencyFeaturedCard() {
-  const { rates, currencies: exchangeCurrencies } = useExchangeRates();
+  const navigate = useNavigate();
+  const { rates } = useExchangeRates();
   const [featured, setFeatured] = useState<FeaturedQuote[]>([]);
-  const [value, setValue] = useState(1);
-  const [from, setFrom] = useState(DEFAULT_FROM);
-  const [to, setTo] = useState(DEFAULT_TO);
+  const [quoteType, setQuoteType] = useState<QuoteType>('comercial');
 
   useEffect(() => {
     fetchFeaturedQuotes().then(setFeatured);
   }, []);
 
-  const currencyOptions = useMemo(
-    () => [buildCurrencyInfo('BRL'), ...exchangeCurrencies],
-    [exchangeCurrencies],
-  );
-
-  const result = useMemo(
-    () => converterMatrizMoedas(value, from, to, rates),
-    [value, from, to, rates],
-  );
-
-  const unitRate = useMemo(
-    () => converterMatrizMoedas(1, from, to, rates),
-    [from, to, rates],
-  );
-
   const featuredMap = useMemo(() => new Map(featured.map((q) => [q.code, q])), [featured]);
 
-  const getPairDisplay = (pair: FeaturedPair) => {
-    if (pair.crossTo) {
-      const eur = rates.EUR;
-      const usd = rates.USD;
-      if (!eur || !usd) return { rate: null, pct: null };
-      const crossRate = eur / usd;
-      const eurPct = featuredMap.get('EUR')?.pctChange ?? null;
-      const usdPct = featuredMap.get('USD')?.pctChange ?? null;
-      const pct =
-        eurPct !== null && usdPct !== null ? eurPct - usdPct : null;
-      return { rate: crossRate, pct };
+  const asks = useMemo(() => {
+    const map: Record<string, number | null> = {};
+    for (const q of featured) map[q.code] = q.ask;
+    return map;
+  }, [featured]);
+
+  const adjustedRates = useMemo(
+    () => applyQuoteTypeToRates(rates, quoteType, asks),
+    [rates, quoteType, asks],
+  );
+
+  const activeQuote = QUOTE_TYPES.find((q) => q.id === quoteType)!;
+
+  const demoResult = useMemo(
+    () => converterMatrizMoedas(DEMO_AMOUNT, DEMO_FROM, DEMO_TO, adjustedRates),
+    [adjustedRates],
+  );
+
+  const previewRates = useMemo(
+    () =>
+      PREVIEW_CODES.map((code) => {
+        const commercial = featuredMap.get(code)?.rate ?? rates[code];
+        const ask = featuredMap.get(code)?.ask;
+        return {
+          code,
+          value: commercial
+            ? adjustRateForQuoteType(commercial, quoteType, ask)
+            : null,
+        };
+      }),
+    [featuredMap, rates, quoteType],
+  );
+
+  const goToConverter = useCallback(() => {
+    navigate(ROUTES.conversorMoedas);
+  }, [navigate]);
+
+  const handleCardKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      goToConverter();
     }
-    const quote = featuredMap.get(pair.quoteCode);
-    const rate = quote?.rate ?? rates[pair.quoteCode];
-    return { rate: rate ?? null, pct: quote?.pctChange ?? null };
   };
 
-  const formatPairRate = (pair: FeaturedPair, rate: number) => {
-    if (pair.crossTo) return rate.toFixed(4);
-    if (pair.quoteCode === 'BTC') return formatRateBRL(rate, 'BTC');
-    return formatRateBRL(rate, pair.quoteCode);
+  const handleQuoteTypeClick = (e: MouseEvent, type: QuoteType) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setQuoteType(type);
   };
 
   return (
-    <section
-      aria-labelledby="currency-featured-heading"
-      className="w-full rounded-2xl md:rounded-[1.25rem] border border-amber-200/80 bg-gradient-to-br from-amber-50/90 via-amber-50/40 to-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_30px_rgba(180,83,9,0.06)] overflow-hidden"
+    <article
+      role="link"
+      tabIndex={0}
+      aria-label="Conversor de Moedas — clique para acessar a ferramenta completa"
+      onClick={goToConverter}
+      onKeyDown={handleCardKeyDown}
+      className="group w-full rounded-2xl md:rounded-[1.25rem] bg-white border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:bg-slate-50/60 hover:shadow-[0_1px_2px_rgba(15,23,42,0.05),0_6px_20px_rgba(15,23,42,0.05)] transition-all duration-300 ease-out cursor-pointer outline-hidden focus-visible:ring-2 focus-visible:ring-[#800020]/25 focus-visible:ring-offset-2"
     >
-      <div className="px-4 py-4 md:px-6 md:py-5 border-b border-amber-100/80">
-        <div className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-amber-100/80 text-amber-800 shrink-0">
-            <Coins className="w-5 h-5" aria-hidden="true" />
+      <div className="p-4 md:p-5 lg:p-6 flex flex-col gap-4 md:gap-5">
+        {/* Cabeçalho */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="p-2 rounded-lg bg-slate-100 text-slate-600 shrink-0 group-hover:bg-slate-100/80 transition-colors">
+              <Coins className="w-4 h-4" aria-hidden="true" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                Ferramenta independente
+              </p>
+              <h2 className="font-semibold text-base md:text-lg text-slate-900 tracking-tight mt-0.5">
+                Conversor de Moedas
+              </h2>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed max-w-xl">
+                Cotações atualizadas e conversão entre mais de 100 moedas. Acesse o conversor completo para histórico e simulações.
+              </p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700">
-              Ferramenta independente
-            </p>
-            <h2 id="currency-featured-heading" className="font-extrabold text-lg md:text-xl text-slate-900 tracking-tight mt-0.5">
-              Conversor de Moedas
-            </h2>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Cotações em tempo real e conversão rápida — acesse a página completa para histórico e mais moedas.
-            </p>
-          </div>
-        </div>
-      </div>
 
-      <div className="p-4 md:p-6 flex flex-col lg:flex-row gap-6 lg:gap-8">
-        {/* Cotações rápidas */}
-        <div className="flex-1 min-w-0">
-          <h3 className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-3">
-            Principais pares
-          </h3>
-          <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory lg:grid lg:grid-cols-2 lg:overflow-visible lg:pb-0">
-            {FEATURED_PAIRS.map((pair) => {
-              const { rate, pct } = getPairDisplay(pair);
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400 group-hover:text-[#800020] transition-colors shrink-0 self-start sm:self-center">
+            Acessar
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+          </span>
+        </div>
+
+        {/* Seletor de tipo de cotação */}
+        <div
+          data-quote-selector
+          className="flex flex-col gap-2"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Tipo de cotação">
+            {QUOTE_TYPES.map((type) => {
+              const isActive = quoteType === type.id;
               return (
                 <button
-                  key={pair.id}
+                  key={type.id}
                   type="button"
-                  onClick={() => {
-                    if (pair.crossTo) {
-                      setFrom(pair.quoteCode);
-                      setTo(pair.crossTo);
-                    } else {
-                      setFrom(pair.quoteCode);
-                      setTo('BRL');
-                    }
-                    setValue(1);
-                  }}
-                  className="snap-start shrink-0 w-[8.5rem] lg:w-auto text-left rounded-xl bg-white/80 border border-amber-100/90 p-3 hover:border-amber-300 hover:shadow-sm transition-all"
+                  aria-pressed={isActive}
+                  onClick={(e) => handleQuoteTypeClick(e, type.id)}
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-all duration-200 ${
+                    isActive
+                      ? 'bg-slate-900 text-white border-slate-900'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
                 >
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="text-sm" aria-hidden="true">{pair.flag}</span>
-                    {pctBadge(pct)}
-                  </div>
-                  <p className="text-[10px] font-bold text-slate-600 mt-1.5">{pair.label}</p>
-                  <p className="font-mono text-sm font-extrabold text-slate-900 mt-0.5">
-                    {rate ? formatPairRate(pair, rate) : '—'}
-                  </p>
+                  {type.label}
                 </button>
               );
             })}
           </div>
+          <p className="text-[11px] text-slate-500 leading-relaxed">
+            <span className="font-semibold text-slate-600">Cotação {activeQuote.label}:</span>{' '}
+            {activeQuote.hint}
+            {quoteType === 'paralelo' && (
+              <span className="text-slate-400"> (estimativa indicativa)</span>
+            )}
+          </p>
         </div>
 
-        {/* Conversor compacto */}
-        <div className="flex-1 min-w-0 lg:max-w-md lg:ml-auto">
-          <h3 className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-3">
-            Conversão rápida
-          </h3>
-          <div className="rounded-xl bg-white/80 border border-amber-100/90 p-4 flex flex-col gap-3">
-            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-2 items-end">
-              <CurrencySelect
-                id="featured-de-moeda"
-                label="De"
-                value={from}
-                onChange={setFrom}
-                currencies={currencyOptions}
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setFrom(to);
-                  setTo(from);
-                }}
-                className="p-2 border border-slate-200 hover:border-amber-400 hover:bg-amber-50 text-slate-500 rounded-xl transition-all self-center sm:self-end"
-                aria-label="Inverter moedas"
-              >
-                <ArrowRightLeft className="w-4 h-4" />
-              </button>
-              <CurrencySelect
-                id="featured-para-moeda"
-                label="Para"
-                value={to}
-                onChange={setTo}
-                currencies={currencyOptions}
-              />
-            </div>
+        {/* Cotações + exemplo */}
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 pt-1 border-t border-slate-100">
+          <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-0.5 -mx-1 px-1">
+            {previewRates.map(({ code, value }) => (
+              <div key={code} className="shrink-0">
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{code}/BRL</p>
+                <p className="font-mono text-sm font-bold text-slate-800 mt-0.5">
+                  {value ? formatRateBRL(value, code) : '—'}
+                </p>
+              </div>
+            ))}
+          </div>
 
-            <div className="relative">
-              <span className="absolute left-3 top-2.5 text-xs font-bold font-mono text-slate-500" aria-hidden="true">
-                {from}
+          <div className="shrink-0 md:text-right">
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Exemplo</p>
+            <p className="text-sm text-slate-700 mt-0.5">
+              <span className="font-mono font-bold text-slate-900">
+                {DEMO_AMOUNT} {DEMO_FROM} = {formatConvertedValue(demoResult, DEMO_TO)}
               </span>
-              <input
-                type="number"
-                min={0}
-                value={value || ''}
-                onChange={(e) => setValue(Math.max(0, parseFloat(e.target.value) || 0))}
-                className="w-full pl-12 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-hidden focus:border-amber-400"
-                aria-label="Valor a converter"
-              />
-            </div>
-
-            <div className="rounded-lg bg-amber-50/60 border border-amber-100 px-3 py-2.5 text-center">
-              <p className="text-[10px] text-amber-800 font-semibold">
-                1 {from} = {formatConvertedValue(unitRate, to)}
-              </p>
-              <p className="font-mono text-base font-extrabold text-[#704214] mt-0.5">
-                {formatConvertedValue(result, to)}
-              </p>
-            </div>
+            </p>
           </div>
         </div>
       </div>
-
-      <div className="px-4 py-3 md:px-6 border-t border-amber-100/80 bg-white/40 flex justify-end">
-        <Link
-          to={ROUTES.conversorMoedas}
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 hover:text-amber-950 transition-colors"
-        >
-          Acessar conversor
-          <ArrowRight className="w-4 h-4" aria-hidden="true" />
-        </Link>
-      </div>
-    </section>
+    </article>
   );
 }

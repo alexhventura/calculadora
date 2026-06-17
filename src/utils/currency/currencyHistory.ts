@@ -11,6 +11,7 @@ export interface DailyRatePoint {
 export interface FeaturedQuote {
   code: string;
   rate: number;
+  ask: number | null;
   pctChange: number | null;
   high: number | null;
   low: number | null;
@@ -93,6 +94,7 @@ export async function fetchFeaturedQuotes(): Promise<FeaturedQuote[]> {
       return {
         code,
         rate: parseNum(item?.bid) ?? 0,
+        ask: parseNum(item?.ask),
         pctChange: parseNum(item?.pctChange),
         high: parseNum(item?.high),
         low: parseNum(item?.low),
