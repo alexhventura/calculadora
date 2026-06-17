@@ -5,6 +5,14 @@ interface EvolucaoChartProps {
   data: RegistroMensal[];
 }
 
+/** Simulado = bordô; demais linhas com contraste claro */
+const CHART_LINE = {
+  simulado: '#800020',
+  poupanca: '#16a34a',
+  cdi: '#0f172a',
+  investido: '#2563eb',
+} as const;
+
 export default function EvolucaoChart({ data }: EvolucaoChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 600, height: 320 });
@@ -176,11 +184,11 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
             onClick={() => setActiveLegend('cdi')}
             className={`px-2.5 py-2 sm:py-1 rounded-full border transition-all pointer-events-auto cursor-pointer min-h-[2.25rem] sm:min-h-0 ${
               activeLegend === 'cdi' 
-                ? 'bg-slate-800 text-white border-slate-800 shadow-sm' 
+                ? 'bg-slate-900 text-white border-slate-900 shadow-sm' 
                 : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
             }`}
           >
-            <span className="inline-block w-2.5 h-2.5 rounded-xs border-t-2 border-dashed border-slate-800 mr-1"></span>
+            <span className="inline-block w-2.5 h-2.5 rounded-xs border-t-2 border-dashed border-slate-900 mr-1"></span>
             Taxa Selic/CDI
           </button>
           <button 
@@ -188,12 +196,12 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
             onClick={() => setActiveLegend('poupanca')}
             className={`px-2.5 py-2 sm:py-1 rounded-full border transition-all pointer-events-auto cursor-pointer min-h-[2.25rem] sm:min-h-0 ${
               activeLegend === 'poupanca' 
-                ? 'bg-slate-400 text-white border-slate-400 shadow-sm' 
+                ? 'bg-green-600 text-white border-green-600 shadow-sm' 
                 : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
             }`}
           >
-            <span className="inline-block w-2.5 h-2.5 rounded-full bg-slate-400 mr-1"></span>
-            Poupança (Simulado)
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-green-600 mr-1"></span>
+            Poupança
           </button>
         </div>
       </div>
@@ -260,34 +268,36 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
             );
           })}
 
-          {/* Linha do Valor Principal Investido (base cinza bem claro) */}
+          {/* Linha do Valor Principal Investido */}
           <path
             d={pathInvestido}
             fill="none"
-            stroke="#e2e8f0"
+            stroke={CHART_LINE.investido}
             strokeWidth="2"
             strokeLinecap="round"
+            strokeDasharray="6 4"
+            opacity="0.85"
             className="transition-all duration-300"
           />
 
-          {/* Linha da Poupança (Cinza Médio Sólido) */}
+          {/* Linha da Poupança (Verde) */}
           {(activeLegend === 'all' || activeLegend === 'poupanca') && (
             <path
               d={pathPoupanca}
               fill="none"
-              stroke="#cbd5e1"
+              stroke={CHART_LINE.poupanca}
               strokeWidth="2.5"
               strokeLinecap="round"
               className="transition-all duration-300"
             />
           )}
 
-          {/* Linha do CDI (Preta Tracejada) */}
+          {/* Linha do CDI (Preto tracejado) */}
           {(activeLegend === 'all' || activeLegend === 'cdi') && (
             <path
               d={pathCDI}
               fill="none"
-              stroke="#1e293b"
+              stroke={CHART_LINE.cdi}
               strokeWidth="2.5"
               strokeDasharray="4 4"
               strokeLinecap="round"
@@ -295,12 +305,12 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
             />
           )}
 
-          {/* Linha Simulado do Usuário (Bordô Sólido) */}
+          {/* Linha Simulado do Usuário (Bordô) */}
           {(activeLegend === 'all' || activeLegend === 'user') && (
             <path
               d={pathUser}
               fill="none"
-              stroke="#800020"
+              stroke={CHART_LINE.simulado}
               strokeWidth="3.5"
               strokeLinecap="round"
               className="transition-all duration-300"
@@ -325,7 +335,7 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
                 y1={paddingTop}
                 x2={getX(hoveredIndex)}
                 y2={paddingTop + chartHeight}
-                stroke="#800020"
+                stroke={CHART_LINE.simulado}
                 strokeWidth="1"
                 strokeDasharray="3 3"
                 opacity="0.8"
@@ -335,7 +345,7 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
                 cx={getX(hoveredIndex)}
                 cy={getY(data[hoveredIndex].totalInvestido)}
                 r="3.5"
-                fill="#cbd5e1"
+                fill={CHART_LINE.investido}
                 stroke="#fff"
                 strokeWidth="1.5"
               />
@@ -344,7 +354,7 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
                   cx={getX(hoveredIndex)}
                   cy={getY(data[hoveredIndex].saldoPoupanca)}
                   r="4"
-                  fill="#94a3b8"
+                  fill={CHART_LINE.poupanca}
                   stroke="#fff"
                   strokeWidth="1.5"
                 />
@@ -354,7 +364,7 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
                   cx={getX(hoveredIndex)}
                   cy={getY(data[hoveredIndex].saldoCDI)}
                   r="4"
-                  fill="#1e293b"
+                  fill={CHART_LINE.cdi}
                   stroke="#fff"
                   strokeWidth="1.5"
                 />
@@ -364,7 +374,7 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
                   cx={getX(hoveredIndex)}
                   cy={getY(data[hoveredIndex].saldoUser)}
                   r="5.5"
-                  fill="#800020"
+                  fill={CHART_LINE.simulado}
                   stroke="#fff"
                   strokeWidth="2"
                   className="shadow-sm"
@@ -397,7 +407,7 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
             <div className="space-y-1.5 font-mono">
               <div className="flex justify-between items-center text-slate-500">
                 <span className="flex items-center gap-1 font-sans">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: CHART_LINE.investido }}></span>
                   Investido:
                 </span>
                 <span className="font-semibold text-slate-700">
@@ -405,9 +415,9 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
                 </span>
               </div>
               
-              <div className="flex justify-between items-center text-rose-950 font-bold">
-                <span className="flex items-center gap-1 text-[#800020] font-sans">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#800020]"></span>
+              <div className="flex justify-between items-center font-bold">
+                <span className="flex items-center gap-1 font-sans" style={{ color: CHART_LINE.simulado }}>
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: CHART_LINE.simulado }}></span>
                   Simulado:
                 </span>
                 <span>
@@ -416,8 +426,8 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
               </div>
 
               <div className="flex justify-between items-center text-slate-800">
-                <span className="flex items-center gap-1 text-slate-800 font-sans">
-                  <span className="w-1.5 h-1.5 rounded-xs border-t border-dashed border-slate-800"></span>
+                <span className="flex items-center gap-1 font-sans text-slate-900">
+                  <span className="w-1.5 h-1.5 rounded-xs border-t border-dashed border-slate-900"></span>
                   Evol. CDI:
                 </span>
                 <span className="font-semibold">
@@ -425,9 +435,9 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
                 </span>
               </div>
 
-              <div className="flex justify-between items-center text-slate-500">
-                <span className="flex items-center gap-1 text-slate-500 font-sans">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+              <div className="flex justify-between items-center text-slate-700">
+                <span className="flex items-center gap-1 font-sans text-green-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-600"></span>
                   Poupança:
                 </span>
                 <span className="font-semibold">
@@ -444,18 +454,22 @@ export default function EvolucaoChart({ data }: EvolucaoChartProps) {
         <div className="text-[10px] text-slate-500 max-w-md">
           * Arraste o cursor sobre as linhas para inspecionar e comparar os valores em qualquer mês da evolução patrimonial simulada.
         </div>
-        <div className="flex items-center gap-2.5 text-[11px] font-mono font-medium text-slate-600">
+        <div className="flex flex-wrap items-center gap-2.5 text-[11px] font-mono font-medium text-slate-600">
           <div className="flex items-center gap-1">
-            <span className="w-2 h-0.5 bg-[#800020] inline-block"></span>
+            <span className="w-2 h-0.5 inline-block" style={{ backgroundColor: CHART_LINE.simulado }}></span>
             <span>Simulado</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="w-2 h-0.5 border-t border-dashed border-slate-700 inline-block"></span>
+            <span className="w-2 h-0.5 border-t border-dashed border-slate-900 inline-block"></span>
             <span>CDI</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="w-2 h-0.5 bg-slate-300 inline-block"></span>
+            <span className="w-2 h-0.5 inline-block bg-green-600"></span>
             <span>Poupança</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="w-2 h-0.5 border-t border-dashed inline-block" style={{ borderColor: CHART_LINE.investido }}></span>
+            <span>Investido</span>
           </div>
         </div>
       </div>
