@@ -9,6 +9,7 @@ export const INDEXABLE_PATHS = [
   '/clt-pj',
   '/aposentadoria',
   '/rescisao-trabalhista',
+  '/conversor-de-moedas',
   '/calculadora/juros-compostos',
   '/calculadora/clt-vs-pj',
   '/calculadora/aposentadoria',

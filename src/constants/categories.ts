@@ -28,7 +28,7 @@ export const SEO_CATEGORIES: SeoCategory[] = [
       'Planejamento financeiro, metas de patrimônio e simulações para decisões do dia a dia.',
     tools: [
       { label: 'Juros Compostos', href: toolPath('juros'), available: true },
-      { label: 'Conversor de Moedas', href: ROUTES.home, available: true },
+      { label: 'Conversor de Moedas', href: ROUTES.conversorMoedas, available: true },
     ],
     blogSlugs: ['como-sair-das-dividas', 'quanto-investir-para-se-aposentar'],
   },

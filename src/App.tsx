@@ -11,6 +11,7 @@ const BlogListPage = lazy(() => import('./pages/BlogListPage'));
 const BlogArticlePage = lazy(() => import('./pages/BlogArticlePage'));
 const CategoryPage = lazy(() => import('./pages/CategoryPage'));
 const InstitutionalPage = lazy(() => import('./pages/InstitutionalPage'));
+const CurrencyConverterPage = lazy(() => import('./pages/CurrencyConverterPage'));
 
 function PageFallback() {
   return (
@@ -41,6 +42,14 @@ export default function App() {
         <Route path={ROUTES.cltPj} element={<Calc tool="clt-pj" />} />
         <Route path={ROUTES.aposentadoria} element={<Calc tool="aposentadoria" />} />
         <Route path={ROUTES.rescisao} element={<Calc tool="rescisao" />} />
+        <Route
+          path={ROUTES.conversorMoedas}
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <CurrencyConverterPage />
+            </Suspense>
+          }
+        />
         <Route path="/calculadora/:slug" element={<Calc />} />
 
         <Route element={<SiteLayout />}>

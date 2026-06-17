@@ -22,6 +22,7 @@ export default function SiteLayout() {
           </Link>
           <nav className="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold text-slate-600" aria-label="Navegação principal">
             <Link to={ROUTES.home} className="hover:text-[#800020] transition-colors">Calculadoras</Link>
+            <Link to={ROUTES.conversorMoedas} className="hover:text-[#800020] transition-colors">Conversor</Link>
             <Link to={ROUTES.blog} className="hover:text-[#800020] transition-colors">Blog</Link>
             <Link to={ROUTES.sobre} className="hover:text-[#800020] transition-colors">Sobre</Link>
           </nav>

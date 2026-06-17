@@ -1,5 +1,5 @@
 import type { ToolSeoContent } from '../types';
-import { toolPath } from '../../constants/routes';
+import { ROUTES, toolPath } from '../../constants/routes';
 import { SOURCES_BCB } from '../../constants/eeat';
 
 export const jurosCompostosContent: ToolSeoContent = {
@@ -105,6 +105,11 @@ export const jurosCompostosContent: ToolSeoContent = {
   ],
   sources: [SOURCES_BCB, 'Fórmula de juros compostos — matemática financeira padrão (capitalização periódica)'],
   relatedTools: [
+    {
+      label: 'Conversor de Moedas',
+      href: ROUTES.conversorMoedas,
+      description: 'Cotação em tempo real e conversão entre moedas.',
+    },
     {
       label: 'Calculadora de Aposentadoria',
       href: toolPath('aposentadoria'),

@@ -7,7 +7,6 @@ import {
   DollarSign, 
   Coins, 
   HelpCircle, 
-  ArrowRightLeft, 
   Calculator, 
   ChevronRight, 
   RotateCcw,
@@ -18,12 +17,11 @@ import {
 } from 'lucide-react';
 import { TempoUnidade, TaxaTipo } from '../types';
 import { 
-  converterMatrizMoedas, 
   calcularTaxaPoupancaVal,
   convertAnualParaMensal,
   convertMensalParaAnual
 } from '../utils/finance';
-import { AdSlotTop, AdSlotFooter, AdSlotSidebar, AdSlotInline } from '../components/monetization';
+import { AdSlotTop, AdSlotFooter, AdSlotInline } from '../components/monetization';
 import SkipLink from '../components/layout/SkipLink';
 import PageMeta from '../components/seo/PageMeta';
 import StructuredData from '../components/seo/StructuredData';
@@ -37,9 +35,6 @@ import { formatMilhar, parseMilhar, formatBRL } from '../utils/format';
 import { useEconomicRates } from '../hooks/useEconomicRates';
 import { useExchangeRates } from '../hooks/useExchangeRates';
 import { calculateToolResult } from '../utils/calculations/toolCalculations';
-import CurrencySelect from '../components/CurrencySelect';
-import { buildCurrencyInfo, DEFAULT_FROM, DEFAULT_TO, PLACAR_CODES } from '../constants/currencies';
-import { formatConvertedValue, formatExchangeTimestamp, formatRateBRL } from '../utils/formatExchange';
 
 const EvolucaoChart = lazy(() => import('../components/EvolucaoChart'));
 const TabelaMensal = lazy(() => import('../components/TabelaMensal'));
@@ -100,10 +95,6 @@ export default function CalculatorPage({
   const { ratesStatus, selicRate, ipcaRate } = useEconomicRates();
   const {
     rates: cotasBRL,
-    currencies: exchangeCurrencies,
-    status: exchangeStatus,
-    lastUpdated: exchangeLastUpdated,
-    sourceDate: exchangeSourceDate,
   } = useExchangeRates();
   const navigate = useNavigate();
   const location = useLocation();
@@ -140,16 +131,6 @@ export default function CalculatorPage({
   const [rescisaoMesesTrabalhados, setRescisaoMesesTrabalhados] = useState<number>(12);
   const [rescisaoMotivo, setRescisaoMotivo] = useState<'sem_justa' | 'com_justa' | 'pedido_demissao' | 'acordo'>('sem_justa');
   const [rescisaoDiasTrabalhados, setRescisaoDiasTrabalhados] = useState<number>(30);
-
-  // --- Estados do Conversor de Moedas (Matriz Cruzada Global Completa) ---
-  const [conversorValor, setConversorValor] = useState<number>(0);
-  const [deMoeda, setDeMoeda] = useState<string>(DEFAULT_FROM);
-  const [paraMoeda, setParaMoeda] = useState<string>(DEFAULT_TO);
-
-  const currencyOptions = useMemo(
-    () => [buildCurrencyInfo('BRL'), ...exchangeCurrencies],
-    [exchangeCurrencies],
-  );
 
   const goldRate = cotasBRL.XAU ?? 12900;
 
@@ -273,11 +254,6 @@ export default function CalculatorPage({
   const aposentadoriaData = activeTool === 'aposentadoria' ? (calculoResultado as any) : null;
   const rescisaoData = activeTool === 'rescisao' ? (calculoResultado as any) : null;
 
-  // --- Conversão de Moedas Reativa com a Matriz Bidirecional Completa ---
-  const conversorResultado = useMemo(() => {
-    return converterMatrizMoedas(conversorValor, deMoeda, paraMoeda, cotasBRL);
-  }, [conversorValor, deMoeda, paraMoeda, cotasBRL]);
-
   // --- Manipuladores de Mudança do Seletor de Juros ---
   const handleTaxaTipoChange = (tipo: TaxaTipo) => {
     setTaxaTipo(tipo);
@@ -334,7 +310,6 @@ export default function CalculatorPage({
     setTaxaAnual(0);
     setTaxaTipo('manual');
     setTaxaPeriodo('anual');
-    setConversorValor(0);
   };
 
   return (
@@ -375,7 +350,11 @@ export default function CalculatorPage({
           </div>
 
           {/* Painel compact real-time cotações do dia */}
-          <div className="flex items-center gap-2 text-xs font-mono text-slate-500 bg-slate-50 border border-slate-100 px-3 py-2 rounded-xl sm:rounded-full select-none justify-center w-full sm:w-auto min-w-0 overflow-hidden" role="status" aria-live="polite" aria-label="Cotações do dia">
+          <Link
+            to={ROUTES.conversorMoedas}
+            className="flex items-center gap-2 text-xs font-mono text-slate-500 bg-slate-50 border border-slate-100 px-3 py-2 rounded-xl sm:rounded-full select-none justify-center w-full sm:w-auto min-w-0 overflow-hidden hover:border-amber-200 hover:bg-amber-50/40 transition-colors"
+            aria-label="Abrir conversor de moedas — cotações do dia"
+          >
             <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${ratesStatus === 'loading' ? 'bg-blue-400 animate-pulse' : ratesStatus === 'success' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`}></span>
             <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[10px] sm:text-xs text-slate-600 font-medium text-center min-w-0">
               <span className="whitespace-nowrap">
@@ -390,7 +369,7 @@ export default function CalculatorPage({
                 Ouro: <span className="font-extrabold text-slate-900">R$ {goldPriceGram.toFixed(2)}/g</span>
               </span>
             </div>
-          </div>
+          </Link>
 
         </div>
       </header>
@@ -471,6 +450,27 @@ export default function CalculatorPage({
               );
             })}
           </div>
+        </section>
+
+        {/* Ferramenta de câmbio — separada das calculadoras */}
+        <section className="w-full" aria-labelledby="currency-tool-heading">
+          <h2 id="currency-tool-heading" className="sr-only">Conversor de moedas</h2>
+          <Link
+            to={ROUTES.conversorMoedas}
+            className="group flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl border border-amber-200/70 bg-gradient-to-r from-amber-50/80 to-white p-4 sm:p-5 hover:border-amber-300 hover:shadow-sm transition-all"
+          >
+            <div className="p-2.5 rounded-xl bg-amber-100/80 text-amber-800 shrink-0">
+              <Coins className="w-5 h-5" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700">Ferramenta independente</p>
+              <h3 className="font-semibold text-slate-900 mt-0.5">Conversor de Moedas</h3>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                Cotação em tempo real, histórico e conversão entre mais de 100 moedas — em página dedicada.
+              </p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-amber-600 shrink-0 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+          </Link>
         </section>
 
         {/* Área da calculadora selecionada — agrupamento estático, sem sobreposição */}
@@ -982,119 +982,8 @@ export default function CalculatorPage({
 
           </div>
 
-            {/* CARD 2: CONVERSOR DE MOEDAS */}
-            <div className="order-3 lg:col-span-1 lg:col-start-1 lg:row-start-2 h-fit bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col gap-4 relative overflow-hidden">
-              
-              <div className="flex items-center justify-between border-b border-slate-50 pb-3">
-                <h2 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                  <Coins className="w-5 h-5 text-amber-600" />
-                  Conversor Inteligente
-                </h2>
-                <div className="px-1.5 py-0.5 bg-amber-50 rounded-md border border-amber-100 text-[9px] font-bold text-amber-700 tracking-wide uppercase font-mono">
-                  Mercado 2026
-                </div>
-              </div>
-
-              {/* Mini Placar de Cotações em Tempo Real */}
-              <div className="grid grid-cols-3 gap-1.5 text-center text-[10px] font-mono border-b border-slate-50 pb-3">
-                {PLACAR_CODES.map((code) => (
-                  <div key={code} className="bg-slate-50 p-1.5 rounded-lg border border-slate-100">
-                    <div className="text-slate-500 font-sans">{code}</div>
-                    <div className="font-extrabold text-slate-800">
-                      {cotasBRL[code] ? formatRateBRL(cotasBRL[code], code) : '—'}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <p className="text-[9px] text-slate-500 text-center leading-snug px-1">
-                Cotações atualizadas automaticamente.
-                {exchangeLastUpdated ? (
-                  <> Última atualização: <span className="font-semibold text-slate-500">{formatExchangeTimestamp(exchangeLastUpdated)}</span>.</>
-                ) : exchangeStatus === 'loading' ? (
-                  <> Carregando cotações…</>
-                ) : (
-                  <> Usando cotações de referência.</>
-                )}
-                {exchangeStatus === 'cached' && exchangeSourceDate ? (
-                  <span className="block text-[8px] text-slate-500 mt-0.5">Referência de mercado: {exchangeSourceDate}</span>
-                ) : null}
-              </p>
-
-              {/* Input Valor para Conversão */}
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="conversor-valor" className="text-xs font-semibold text-slate-600">Valor a Converter</label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-2.5 text-xs text-slate-600 font-bold font-mono" aria-hidden="true">
-                    {deMoeda}
-                  </span>
-                  <input
-                    id="conversor-valor"
-                    type="number"
-                    value={conversorValor || ''}
-                    onChange={(e) => setConversorValor(Math.max(0, parseFloat(e.target.value) || 0))}
-                    className="w-full pl-14 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-amber-500 text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
-                    placeholder="1000"
-                  />
-                </div>
-              </div>
-
-              {/* Seletores de Direção (De -> Para) */}
-              <div className="flex flex-col gap-2">
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  
-                  <CurrencySelect
-                    id="conversor-de-moeda"
-                    label="Moeda de origem"
-                    value={deMoeda}
-                    onChange={setDeMoeda}
-                    currencies={currencyOptions}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const temp = deMoeda;
-                      setDeMoeda(paraMoeda);
-                      setParaMoeda(temp);
-                    }}
-                    className="p-2.5 min-h-[2.75rem] sm:min-h-0 border border-slate-200 hover:border-amber-500 hover:bg-amber-50 text-slate-500 hover:text-amber-700 rounded-xl transition-all cursor-pointer shrink-0 self-center"
-                    title="Inverter Sentido"
-                    aria-label="Inverter moedas de origem e destino"
-                  >
-                    <ArrowRightLeft className="w-4 h-4 mx-auto" />
-                  </button>
-
-                  <CurrencySelect
-                    id="conversor-para-moeda"
-                    label="Moeda de destino"
-                    value={paraMoeda}
-                    onChange={setParaMoeda}
-                    currencies={currencyOptions}
-                  />
-
-                </div>
-
-                <div className="text-[9px] text-center text-slate-500 font-medium">
-                  Conversão cruzada instantânea de <span className="font-bold text-slate-500">[{deMoeda}]</span> para <span className="font-bold text-slate-500">[{paraMoeda}]</span>
-                </div>
-              </div>
-
-              {/* Painel do Resultado do Conversor */}
-              <div className="rounded-xl border border-amber-100 bg-amber-50/45 p-4 flex flex-col items-center justify-center text-center relative overflow-hidden">
-                <div className="text-[10px] font-sans font-semibold tracking-wide text-amber-700 uppercase">Resultado Convertido</div>
-                <div className="font-mono text-base font-extrabold text-[#704214] mt-1 break-currency px-1">
-                  {formatConvertedValue(conversorResultado, paraMoeda)}
-                </div>
-              </div>
-
-            </div>
-
-            <AdSlotSidebar className="w-full shadow-xs" />
-
-
           {/* LADO DIREITO (Width: 3/4) */}
-          <div className="order-2 lg:col-span-3 lg:col-start-2 lg:row-start-1 lg:row-span-3 flex flex-col gap-8">
+          <div className="order-2 lg:col-span-3 lg:col-start-2 lg:row-start-1 flex flex-col gap-8">
             
             {/* GRID DO TOPO: CARDS DE RESULTADOS DESTACADOS */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">

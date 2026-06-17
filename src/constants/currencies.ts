@@ -119,3 +119,9 @@ export const DEFAULT_FROM = 'USD';
 export const DEFAULT_TO = 'BRL';
 
 export const PLACAR_CODES = ['USD', 'EUR', 'BTC'] as const;
+
+/** Moedas mais consultadas — chips rápidos no conversor */
+export const POPULAR_CODES = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'ARS', 'BTC', 'ETH'] as const;
+
+/** Valores para conversões rápidas pré-calculadas */
+export const QUICK_CONVERT_AMOUNTS = [1, 10, 100, 1000] as const;
