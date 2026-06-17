@@ -46,6 +46,12 @@ async function main() {
     return;
   }
 
+  // Vercel/CI: prerender exige Chromium; sem ele o SPA funciona normalmente.
+  if (process.env.VERCEL === '1' && process.env.ENABLE_PRERENDER !== '1') {
+    console.log('[prerender] ignorado na Vercel (defina ENABLE_PRERENDER=1 + playwright install chromium para ativar)');
+    return;
+  }
+
   let chromium;
   try {
     ({ chromium } = await import('playwright'));
@@ -60,7 +66,13 @@ async function main() {
 
   try {
     await waitForServer();
-    const browser = await chromium.launch({ headless: true });
+    let browser;
+    try {
+      browser = await chromium.launch({ headless: true });
+    } catch (err) {
+      console.warn('[prerender] Chromium indisponível — build continua sem pré-render:', err.message);
+      return;
+    }
     const context = await browser.newContext();
 
     for (const route of INDEXABLE_PATHS) {
@@ -87,6 +99,5 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error('[prerender] falhou:', err.message);
-  process.exit(1);
+  console.warn('[prerender] falhou — build continua sem pré-render:', err.message);
 });
