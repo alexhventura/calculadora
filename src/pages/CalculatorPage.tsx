@@ -473,36 +473,28 @@ export default function CalculatorPage({
           </div>
         </section>
 
-        {/* Área da calculadora selecionada */}
-        <div className="flex flex-col gap-0">
-          <div className="flex items-center gap-3 py-3 px-1" role="status" aria-live="polite">
-            <div className="h-px flex-1 bg-slate-200/90" aria-hidden="true" />
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 tracking-tight shrink-0">
-              <ActiveToolIcon className="w-3.5 h-3.5 text-[#800020]" aria-hidden="true" />
-              {activeToolMeta.title}
-            </span>
-            <div className="h-px flex-1 bg-slate-200/90" aria-hidden="true" />
-          </div>
-
+        {/* Área da calculadora selecionada — agrupamento estático, sem sobreposição */}
         <div
           id="active-calculator-workspace"
           role="region"
           aria-labelledby="active-tool-heading"
-          className="rounded-2xl md:rounded-[1.25rem] bg-white border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_30px_rgba(15,23,42,0.04)] overflow-hidden scroll-mt-28"
+          className="rounded-2xl md:rounded-[1.25rem] bg-white border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_30px_rgba(15,23,42,0.04)]"
         >
-          <div className="sticky top-[4.25rem] z-30 flex items-center gap-2.5 px-4 py-2.5 md:px-6 md:py-3 bg-white/80 backdrop-blur-xl border-b border-slate-200/70 supports-[backdrop-filter]:bg-white/70">
-            <div className="p-1.5 rounded-lg bg-[#800020]/[0.06] text-[#800020] shrink-0">
+          <header className="flex items-start gap-3 px-4 py-4 md:px-6 md:py-5 bg-slate-50 border-b border-slate-200/60 rounded-t-2xl md:rounded-t-[1.25rem]">
+            <div className="p-2 rounded-lg bg-[#800020]/[0.06] text-[#800020] shrink-0">
               <ActiveToolIcon className="w-4 h-4" aria-hidden="true" />
             </div>
-            <p id="active-tool-heading" className="flex-1 min-w-0 font-semibold text-[13px] md:text-sm text-slate-900 truncate tracking-tight">
-              {activeToolMeta.title}
-            </p>
-            <span className="hidden sm:inline text-[10px] font-medium text-slate-400 tracking-wide shrink-0">
-              Em uso
-            </span>
-          </div>
+            <div className="min-w-0 flex-1">
+              <h2 id="active-tool-heading" className="font-semibold text-base md:text-lg text-slate-900 tracking-tight leading-snug">
+                {activeToolMeta.title}
+              </h2>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                {activeToolMeta.description}
+              </p>
+            </div>
+          </header>
 
-          <div className="px-3 pb-5 md:px-5 md:pb-7 lg:px-7 lg:pb-8 pt-3 md:pt-4">
+          <div className="px-3 pb-5 md:px-5 md:pb-7 lg:px-7 lg:pb-8 pt-4 md:pt-5">
             <div className={`rounded-xl ${ACTIVE_TOOL_SURFACE} border border-slate-200/60 p-4 md:p-6 lg:p-8`}>
               <p className="sr-only">
                 Área de trabalho da calculadora {activeToolMeta.title}. Inclui campos de entrada, resultados, gráficos e tabelas.
@@ -1601,9 +1593,8 @@ export default function CalculatorPage({
           </div>
 
             </div>
+            </div>
           </div>
-        </div>
-        </div>
         </div>
         </div>
 
