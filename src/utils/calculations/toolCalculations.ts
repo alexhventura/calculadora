@@ -465,7 +465,7 @@ export function calculateToolResult(input: ToolCalculationInput): ToolCalculatio
   const rescAdv = resolveRescisaoAdvanced(input);
   const baseSalario = rescisaoSalarioNum;
   const mesesTrabalhadosVal = Math.min(
-    Math.max(1, rescisaoMesesTrabalhados),
+    Math.max(0, rescisaoMesesTrabalhados),
     FISCAL_CONFIG.rescisao.maxMeses,
   );
   const motivo = rescisaoMotivo;

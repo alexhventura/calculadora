@@ -80,7 +80,7 @@ export default function CurrencyConverterPage() {
     loading,
   } = useExchangeRates();
 
-  const [value, setValue] = useState(100);
+  const [value, setValue] = useState(0);
   const [from, setFrom] = useState(DEFAULT_FROM);
   const [to, setTo] = useState(DEFAULT_TO);
   const [quoteType, setQuoteType] = useState<QuoteType>('comercial');

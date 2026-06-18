@@ -83,10 +83,11 @@ input[type="range"]::-moz-range-thumb {
   max-width: 100%;
 }
 
-/* Quebra segura de valores monetários longos */
-.break-currency {
-  overflow-wrap: anywhere;
-  word-break: break-word;
+/* Valores monetários em cards — uma linha, escala via CurrencyAmount */
+.fit-currency {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  max-width: 100%;
 }
 
 /* Scrollbar fina */

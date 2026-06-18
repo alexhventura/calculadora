@@ -43,13 +43,13 @@ import FieldHint from '../components/calculator/FieldHint';
 import HowToUseButton from '../components/calculator/HowToUseButton';
 const HowToUseModal = lazy(() => import('../components/calculator/HowToUseModal'));
 import CalculatorActionBar from '../components/calculator/CalculatorActionBar';
+import CurrencyAmount from '../components/calculator/CurrencyAmount';
 import { useCalculatorMode } from '../hooks/useCalculatorMode';
 import { TOOL_GUIDES } from '../config/toolGuides';
 import { HOW_TO_USE } from '../config/howToUse';
 import { EMPTY_FORM_VALUES, emptyAdvancedForTool } from '../constants/defaultFormValues';
 import { calcularPeriodoRescisao } from '../utils/rescisaoDates';
 import {
-  DEFAULT_ADVANCED_OPTIONS,
   type AdvancedCalculatorOptions,
 } from '../types/calculator';
 import type { RescisaoMotivo } from '../utils/calculations/toolCalculations';
@@ -125,42 +125,44 @@ export default function CalculatorPage({
   const location = useLocation();
   const { slug } = useParams<{ slug?: string }>();
 
-  // --- Estados da Calculadora (com máscaras brasileiras) ---
-  const [valorInicialStr, setValorInicialStr] = useState<string>('1.000');
-  const [aporteMensalStr, setAporteMensalStr] = useState<string>('500');
-  const [tempo, setTempo] = useState<number>(20);
-  const [tempoUnidade, setTempoUnidade] = useState<TempoUnidade>('anos');
-  const [taxaAnual, setTaxaAnual] = useState<number>(10);
-  const [taxaTipo, setTaxaTipo] = useState<TaxaTipo>('manual');
-  const [taxaPeriodo, setTaxaPeriodo] = useState<'anual' | 'mensal'>('anual');
+  // --- Estados da Calculadora (início zerado — sem exemplos pré-preenchidos) ---
+  const [valorInicialStr, setValorInicialStr] = useState<string>(EMPTY_FORM_VALUES.juros.valorInicialStr);
+  const [aporteMensalStr, setAporteMensalStr] = useState<string>(EMPTY_FORM_VALUES.juros.aporteMensalStr);
+  const [tempo, setTempo] = useState<number>(EMPTY_FORM_VALUES.juros.tempo);
+  const [tempoUnidade, setTempoUnidade] = useState<TempoUnidade>(EMPTY_FORM_VALUES.juros.tempoUnidade);
+  const [taxaAnual, setTaxaAnual] = useState<number>(EMPTY_FORM_VALUES.juros.taxaAnual);
+  const [taxaTipo, setTaxaTipo] = useState<TaxaTipo>(EMPTY_FORM_VALUES.juros.taxaTipo);
+  const [taxaPeriodo, setTaxaPeriodo] = useState<'anual' | 'mensal'>(EMPTY_FORM_VALUES.juros.taxaPeriodo);
 
   // --- Estado da Ferramenta Ativa (Bento UI) ---
   const [activeTool, setActiveTool] = useState<ActiveTool>(initialTool ?? 'juros');
 
   // --- Estados do Comparativo CLT vs PJ ---
-  const [salarioCltStr, setSalarioCltStr] = useState<string>('8.000');
-  const [cltVrStr, setCltVrStr] = useState<string>('1.000');
-  const [cltSaudeStr, setCltSaudeStr] = useState<string>('650');
-  const [cltOutrosStr, setCltOutrosStr] = useState<string>('400');
-  const [faturamentoPjStr, setFaturamentoPjStr] = useState<string>('12.000');
+  const [salarioCltStr, setSalarioCltStr] = useState<string>(EMPTY_FORM_VALUES['clt-pj'].salarioCltStr);
+  const [cltVrStr, setCltVrStr] = useState<string>(EMPTY_FORM_VALUES['clt-pj'].cltVrStr);
+  const [cltSaudeStr, setCltSaudeStr] = useState<string>(EMPTY_FORM_VALUES['clt-pj'].cltSaudeStr);
+  const [cltOutrosStr, setCltOutrosStr] = useState<string>(EMPTY_FORM_VALUES['clt-pj'].cltOutrosStr);
+  const [faturamentoPjStr, setFaturamentoPjStr] = useState<string>('');
 
   // --- Estados do Plano de Aposentadoria ---
-  const [aposentadoriaIdadeAtual, setAposentadoriaIdadeAtual] = useState<number>(35);
-  const [aposentadoriaIdadeAlvo, setAposentadoriaIdadeAlvo] = useState<number>(65);
-  const [aposentadoriaSalarioAtualStr, setAposentadoriaSalarioAtualStr] = useState<string>('8.000');
-  const [aposentadoriaRendaDesejadaStr, setAposentadoriaRendaDesejadaStr] = useState<string>('10.000');
-  const [aposentadoriaPatrimonioAtualStr, setAposentadoriaPatrimonioAtualStr] = useState<string>('0');
+  const [aposentadoriaIdadeAtual, setAposentadoriaIdadeAtual] = useState<number>(EMPTY_FORM_VALUES.aposentadoria.idadeAtual);
+  const [aposentadoriaIdadeAlvo, setAposentadoriaIdadeAlvo] = useState<number>(EMPTY_FORM_VALUES.aposentadoria.idadeAlvo);
+  const [aposentadoriaSalarioAtualStr, setAposentadoriaSalarioAtualStr] = useState<string>(EMPTY_FORM_VALUES.aposentadoria.salarioAtualStr);
+  const [aposentadoriaRendaDesejadaStr, setAposentadoriaRendaDesejadaStr] = useState<string>(EMPTY_FORM_VALUES.aposentadoria.rendaDesejadaStr);
+  const [aposentadoriaPatrimonioAtualStr, setAposentadoriaPatrimonioAtualStr] = useState<string>(EMPTY_FORM_VALUES.aposentadoria.patrimonioAtualStr);
 
   const [howToUseOpen, setHowToUseOpen] = useState(false);
 
   // --- Estados do Cálculo de Rescisão ---
-  const [rescisaoSalarioStr, setRescisaoSalarioStr] = useState<string>('5.000');
-  const [rescisaoDataAdmissao, setRescisaoDataAdmissao] = useState<string>('2022-01-10');
-  const [rescisaoDataDesligamento, setRescisaoDataDesligamento] = useState<string>('2024-06-15');
-  const [rescisaoMotivo, setRescisaoMotivo] = useState<RescisaoMotivo>('sem_justa');
+  const [rescisaoSalarioStr, setRescisaoSalarioStr] = useState<string>(EMPTY_FORM_VALUES.rescisao.salarioStr);
+  const [rescisaoDataAdmissao, setRescisaoDataAdmissao] = useState<string>(EMPTY_FORM_VALUES.rescisao.dataAdmissao);
+  const [rescisaoDataDesligamento, setRescisaoDataDesligamento] = useState<string>(EMPTY_FORM_VALUES.rescisao.dataDesligamento);
+  const [rescisaoMotivo, setRescisaoMotivo] = useState<RescisaoMotivo>(EMPTY_FORM_VALUES.rescisao.motivo);
 
   const { setMode: setCalculatorMode, isAdvanced } = useCalculatorMode(activeTool);
-  const [advancedOptions, setAdvancedOptions] = useState<AdvancedCalculatorOptions>(DEFAULT_ADVANCED_OPTIONS);
+  const [advancedOptions, setAdvancedOptions] = useState<AdvancedCalculatorOptions>(() =>
+    emptyAdvancedForTool(initialTool ?? 'juros'),
+  );
 
   const patchAdvancedOptions = useCallback((patch: Partial<AdvancedCalculatorOptions>) => {
     setAdvancedOptions((prev) => ({
@@ -1182,13 +1184,16 @@ export default function CalculatorPage({
                       <IconComponent className={`w-4 h-4 ${isHighlight ? 'text-white' : 'text-[#800020]'}`} />
                     </div>
 
-                    <div>
+                    <div className="min-w-0 pr-8">
                       <span className={`text-[10px] font-bold tracking-wider uppercase block ${isHighlight ? 'text-white/90' : 'text-slate-500'}`}>
                         {card.titulo}
                       </span>
-                      <h3 className={`font-extrabold text-lg sm:text-xl lg:text-2xl tracking-tight mt-1.5 font-mono break-currency ${isHighlight ? 'text-white' : 'text-slate-800'}`}>
-                        {formatBRL(card.valor)}
-                      </h3>
+                      <CurrencyAmount
+                        as="h3"
+                        value={card.valor}
+                        variant={isHighlight ? 'highlight' : 'card'}
+                        className={`mt-1.5 ${isHighlight ? 'text-white' : 'text-slate-800'}`}
+                      />
                     </div>
 
                     <div className={`text-[11px] border-t pt-2.5 mt-2.5 flex items-center gap-1.5 ${isHighlight ? 'text-white/80 border-white/10' : 'text-slate-500 border-slate-100'}`}>
@@ -1371,9 +1376,12 @@ export default function CalculatorPage({
 
                       <div className="mt-8 pt-4 border-t border-slate-50 bg-[#800020]/5 rounded-xl p-3">
                         <span className="text-[10px] uppercase font-bold text-slate-500 block">Renda Equiv. Mensal Real CLT</span>
-                        <div className="font-mono text-lg font-black text-[#800020] mt-1">
-                          {formatBRL(cltData.receitaMensalEquiv)}
-                        </div>
+                        <CurrencyAmount
+                          as="div"
+                          value={cltData.receitaMensalEquiv}
+                          variant="compact"
+                          className="text-[#800020] mt-1"
+                        />
                         <p className="text-[10px] text-slate-500 mt-1 leading-tight">
                           Considera 13º proporcional, férias cumuladas de 1/3, FGTS recolhido e todos os benefícios livres de impostos.
                         </p>
@@ -1391,7 +1399,11 @@ export default function CalculatorPage({
                         <div className="mt-4 flex flex-col gap-3 text-xs">
                           <div className="flex justify-between py-1.5 border-b border-slate-50 text-[#800020] font-bold">
                             <span>Alvo de Faturamento PJ Mínimo</span>
-                            <span className="font-extrabold font-mono">{formatBRL(pjData.minimoFaturamento)}</span>
+                            <CurrencyAmount
+                              value={pjData.minimoFaturamento}
+                              variant="inline"
+                              className="font-extrabold text-[#800020]"
+                            />
                           </div>
                           <div className="flex justify-between py-1.5 border-b border-slate-50 text-rose-600">
                             <span className="text-slate-500">Simples Nacional (Anexo III - 6%)</span>
@@ -1410,10 +1422,13 @@ export default function CalculatorPage({
 
                       <div className="mt-8 pt-4 border-t border-slate-50 bg-emerald-50 border border-emerald-100 rounded-xl p-3">
                         <span className="text-[10px] uppercase font-bold text-emerald-700 block">Vantagem de Equivalência ANUAL</span>
-                        <div className="font-mono text-lg font-black text-emerald-700 mt-1">
-                          {cltPjExtra?.vantagemAnual && cltPjExtra.vantagemAnual >= 0 ? '+' : ''}
-                          {formatBRL(cltPjExtra?.vantagemAnual || 0)}
-                        </div>
+                        <CurrencyAmount
+                          as="div"
+                          value={cltPjExtra?.vantagemAnual || 0}
+                          variant="compact"
+                          prefix={cltPjExtra?.vantagemAnual && cltPjExtra.vantagemAnual >= 0 ? '+' : ''}
+                          className="text-emerald-700 mt-1"
+                        />
                         <p className="text-[10px] text-slate-500 mt-1 leading-tight">
                           Gasto de custos deduzido. Este faturamento garante exatamente o mesmo benefício e as férias remuneradas do CLT.
                         </p>
@@ -1497,9 +1512,12 @@ export default function CalculatorPage({
                       <div className="mt-4 flex flex-col gap-3.5 text-xs">
                         <div className="bg-slate-50 border border-slate-100 rounded-xl p-3.5 font-sans">
                           <span className="text-[10px] text-slate-500 font-bold uppercase block">Meta Patrimonial no Dia Zero</span>
-                          <span className="font-mono text-lg font-black text-slate-900 block mt-1">
-                            {formatBRL(aposentadoriaData.patrimonioNecessario)}
-                          </span>
+                          <CurrencyAmount
+                            as="span"
+                            value={aposentadoriaData.patrimonioNecessario}
+                            variant="compact"
+                            className="text-slate-900 mt-1 block"
+                          />
                           <span className="text-[10px] text-slate-500 font-sans mt-1 block leading-normal">
                             Baseia-se na Regra de retirada real líquida de <strong>0,35% ao mês</strong> (4% ao ano real) para nunca consumir o patrimônio construído.
                           </span>
@@ -1531,7 +1549,12 @@ export default function CalculatorPage({
                   </div>
                   <div className="shrink-0 w-full sm:w-auto p-4 bg-emerald-700 text-white rounded-xl text-center sm:min-w-[170px] shadow-xs">
                     <span className="text-[9px] uppercase font-bold tracking-wider text-white/80 block">Aporte por Mês</span>
-                    <span className="font-mono text-xl font-black block mt-1">{formatBRL(aposentadoriaData.aporteMensalNecessario)}</span>
+                    <CurrencyAmount
+                      as="span"
+                      value={aposentadoriaData.aporteMensalNecessario}
+                      variant="badge"
+                      className="text-white mt-1 block"
+                    />
                     <span className="text-[9px] text-white/70 block mt-1">Poupança Acima da Inflação</span>
                   </div>
                 </div>

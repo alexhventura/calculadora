@@ -8,8 +8,9 @@ describe('calcularPeriodoRescisao', () => {
     expect(r.diasUltimoMes).toBe(20);
   });
 
-  it('retorna mínimo 1 mês para datas inválidas', () => {
+  it('retorna zero para datas inválidas ou vazias', () => {
     const r = calcularPeriodoRescisao('', '2024-01-01');
-    expect(r.mesesTrabalhados).toBe(1);
+    expect(r.mesesTrabalhados).toBe(0);
+    expect(r.diasUltimoMes).toBe(0);
   });
 });

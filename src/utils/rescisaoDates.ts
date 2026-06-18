@@ -6,7 +6,7 @@ export function calcularPeriodoRescisao(
   const adm = parseDate(dataAdmissao);
   const des = parseDate(dataDesligamento);
   if (!adm || !des || des < adm) {
-    return { mesesTrabalhados: 1, diasUltimoMes: 30 };
+    return { mesesTrabalhados: 0, diasUltimoMes: 0 };
   }
 
   let meses =
