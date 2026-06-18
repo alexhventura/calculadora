@@ -3,6 +3,12 @@
   "outputDirectory": "dist",
   "installCommand": "npm install && npx playwright install chromium",
   "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.calculojuroscompostos.com.br" }],
+      "destination": "https://calculojuroscompostos.com.br/:path*",
+      "permanent": true
+    },
     { "source": "/juros-compostos", "destination": "/", "permanent": true },
     { "source": "/contato", "destination": "/sobre", "permanent": true },
     { "source": "/calculadora/juros-compostos", "destination": "/", "permanent": true },
@@ -10,7 +16,24 @@
     { "source": "/calculadora/aposentadoria", "destination": "/aposentadoria", "permanent": true },
     { "source": "/calculadora/rescisao-trabalhista", "destination": "/rescisao-trabalhista", "permanent": true }
   ],
+  "rewrites": [
+    { "handle": "filesystem" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
   "headers": [
+    {
+      "source": "/sitemap.xml",
+      "headers": [
+        { "key": "Content-Type", "value": "application/xml; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=3600, s-maxage=86400" }
+      ]
+    },
+    {
+      "source": "/robots.txt",
+      "headers": [
+        { "key": "Content-Type", "value": "text/plain; charset=utf-8" }
+      ]
+    },
     {
       "source": "/404.html",
       "headers": [

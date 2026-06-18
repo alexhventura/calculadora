@@ -36,13 +36,18 @@ export default function StructuredData({
       '@id': `${SITE_URL}/#organization`,
       name: SITE_NAME,
       url: SITE_URL,
-      logo: `${SITE_URL}/favicon.svg`,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/favicon.svg`,
+      },
     },
     {
       '@type': 'WebSite',
       '@id': `${SITE_URL}/#website`,
       url: SITE_URL,
       name: SITE_NAME,
+      description:
+        'Calculadora de juros compostos grátis com comparativo Poupança vs Selic/CDI, conversor de moedas e ferramentas financeiras.',
       publisher: { '@id': `${SITE_URL}/#organization` },
       inLanguage: 'pt-BR',
     },

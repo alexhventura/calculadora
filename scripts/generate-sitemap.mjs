@@ -6,6 +6,7 @@ import { INDEXABLE_PATHS, SITE_URL } from './routes.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const distDir = join(__dirname, '..', 'dist');
 const publicDir = join(__dirname, '..', 'public');
+const BUILD_DATE = new Date().toISOString().slice(0, 10);
 
 function priorityFor(path) {
   if (path === '/') return '1.0';
@@ -27,7 +28,7 @@ function changefreqFor(path) {
 
 const urls = INDEXABLE_PATHS.map(
   (path) =>
-    `  <url><loc>${SITE_URL}${path}</loc><changefreq>${changefreqFor(path)}</changefreq><priority>${priorityFor(path)}</priority></url>`,
+    `  <url><loc>${SITE_URL}${path}</loc><lastmod>${BUILD_DATE}</lastmod><changefreq>${changefreqFor(path)}</changefreq><priority>${priorityFor(path)}</priority></url>`,
 ).join('\n');
 
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -45,4 +46,5 @@ Sitemap: ${SITE_URL}/sitemap.xml
 writeFileSync(join(distDir, 'sitemap.xml'), sitemap, 'utf8');
 writeFileSync(join(distDir, 'robots.txt'), robots, 'utf8');
 writeFileSync(join(publicDir, 'sitemap.xml'), sitemap, 'utf8');
-console.log(`[sitemap] ${INDEXABLE_PATHS.length} URLs → dist/sitemap.xml + public/sitemap.xml`);
+writeFileSync(join(publicDir, 'robots.txt'), robots, 'utf8');
+console.log(`[sitemap] ${INDEXABLE_PATHS.length} URLs → dist/ + public/ (lastmod ${BUILD_DATE})`);

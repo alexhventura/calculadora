@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { SITE_NAME, SITE_URL, SITE_OG_IMAGE } from '../../constants/site';
+import { SITE_NAME, SITE_URL, SITE_OG_IMAGE, SITE_OG_IMAGE_ALT } from '../../constants/site';
 
 export interface PageMetaProps {
   title: string;
@@ -52,10 +52,16 @@ export default function PageMeta({
     setMeta('og:title', fullTitle, true);
     setMeta('og:description', description, true);
     setMeta('og:image', SITE_OG_IMAGE, true);
+    setMeta('og:image:secure_url', SITE_OG_IMAGE, true);
+    setMeta('og:image:type', 'image/png', true);
+    setMeta('og:image:width', '1200', true);
+    setMeta('og:image:height', '630', true);
+    setMeta('og:image:alt', SITE_OG_IMAGE_ALT, true);
     setMeta('twitter:card', 'summary_large_image');
     setMeta('twitter:title', fullTitle);
     setMeta('twitter:description', description);
     setMeta('twitter:image', SITE_OG_IMAGE);
+    setMeta('twitter:image:alt', SITE_OG_IMAGE_ALT);
   }, [fullTitle, description, canonicalUrl, ogType, noindex]);
 
   return null;

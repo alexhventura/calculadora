@@ -83,7 +83,10 @@ async function main() {
     await waitForServer();
     let browser;
     try {
-      browser = await chromium.launch({ headless: true });
+      browser = await chromium.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      });
     } catch (err) {
       console.warn('[prerender] Chromium indisponível — build continua sem pré-render:', err.message);
       return;
