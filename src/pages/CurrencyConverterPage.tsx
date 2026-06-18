@@ -1,4 +1,4 @@
-import { useState, useMemo, lazy, Suspense } from 'react';
+import { useState, useMemo, lazy, Suspense, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Coins,
@@ -34,10 +34,16 @@ import { ROUTES } from '../constants/routes';
 import { SITE_URL } from '../constants/site';
 import ToolQuickGuide from '../components/calculator/ToolQuickGuide';
 import PersonalizeTrigger from '../components/calculator/PersonalizeTrigger';
+import HowToUseButton from '../components/calculator/HowToUseButton';
+import HowToUseModal from '../components/calculator/HowToUseModal';
+import CalculatorActionBar from '../components/calculator/CalculatorActionBar';
 import AdvancedSection from '../components/calculator/AdvancedSection';
 import MethodologyPanel from '../components/calculator/MethodologyPanel';
 import { useCalculatorMode } from '../hooks/useCalculatorMode';
 import { CONVERSOR_GUIDE } from '../config/toolGuides';
+import { CONVERSOR_HOW_TO_USE } from '../config/howToUse';
+import { exportCalculationPdf } from '../utils/export/exportCalculationPdf';
+import { buildCalculatorPdfPayload } from '../utils/export/buildCalculatorPdf';
 import { QUOTE_TYPES, applyQuoteTypeToRates, type QuoteType } from '../constants/quoteTypes';
 
 const ToolSeoContent = lazy(() => import('../components/content/ToolSeoContent'));
@@ -80,6 +86,7 @@ export default function CurrencyConverterPage() {
   const [from, setFrom] = useState(DEFAULT_FROM);
   const [to, setTo] = useState(DEFAULT_TO);
   const [quoteType, setQuoteType] = useState<QuoteType>('comercial');
+  const [howToUseOpen, setHowToUseOpen] = useState(false);
   const { setMode: setCalculatorMode, isAdvanced } = useCalculatorMode('conversor');
 
   const chartCode = from === 'BRL' ? to : from;
@@ -133,6 +140,34 @@ export default function CurrencyConverterPage() {
     setFrom(to);
     setTo(from);
   };
+
+  const handleClearData = useCallback(() => {
+    setCalculatorMode('simple');
+    setValue(100);
+    setFrom(DEFAULT_FROM);
+    setTo(DEFAULT_TO);
+    setQuoteType('comercial');
+  }, [setCalculatorMode]);
+
+  const handleSavePdf = useCallback(async () => {
+    const payload = buildCalculatorPdfPayload({
+      activeTool: 'juros',
+      toolTitle: 'Conversor de Moedas',
+      isAdvanced,
+      conversorValue: value,
+      conversorFrom: from,
+      conversorTo: to,
+      conversorResult: result,
+      painelCards: [
+        {
+          titulo: 'Valor convertido',
+          valor: result,
+          subtitulo: `${value.toLocaleString('pt-BR')} ${from} → ${to}`,
+        },
+      ],
+    });
+    await exportCalculationPdf(payload);
+  }, [isAdvanced, value, from, to, result]);
 
   const content = conversorMoedasContent;
   const canonicalPath = ROUTES.conversorMoedas;
@@ -255,6 +290,7 @@ export default function CurrencyConverterPage() {
 
           <div className="p-4 md:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="flex flex-col gap-4 order-2 lg:order-1">
+              <HowToUseButton onClick={() => setHowToUseOpen(true)} />
               <PersonalizeTrigger
                 isAdvanced={isAdvanced}
                 onOpen={() => setCalculatorMode('advanced')}
@@ -288,6 +324,7 @@ export default function CurrencyConverterPage() {
               result={result}
               currencies={currencyOptions}
             />
+              <CalculatorActionBar onClear={handleClearData} onSavePdf={handleSavePdf} />
             </div>
 
             <div className="flex flex-col gap-6">
@@ -467,6 +504,12 @@ export default function CurrencyConverterPage() {
       <AdSlotFooter />
 
       <SiteFooter disclaimer="Cotações indicativas. Não constitui oferta de câmbio ou recomendação de investimento." />
+
+      <HowToUseModal
+        open={howToUseOpen}
+        onClose={() => setHowToUseOpen(false)}
+        content={CONVERSOR_HOW_TO_USE}
+      />
     </div>
   );
 }

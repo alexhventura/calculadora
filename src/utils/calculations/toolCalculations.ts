@@ -361,7 +361,14 @@ export function calculateToolResult(input: ToolCalculationInput): ToolCalculatio
       rendaProjetada = aposAdv.salarioMedio;
     }
 
-    const coberturaINSS = calcularCoberturaPrevidenciaria(rendaProjetada, aposAdv.tipoBeneficio);
+    let coberturaINSS = calcularCoberturaPrevidenciaria(rendaProjetada, aposAdv.tipoBeneficio);
+    if (
+      input.advancedMode &&
+      aposAdv.beneficioMensalManual != null &&
+      aposAdv.beneficioMensalManual >= 0
+    ) {
+      coberturaINSS = aposAdv.beneficioMensalManual;
+    }
     const lacunaRenda = Math.max(0, rendaProjetada - coberturaINSS);
     const taxaSaque = aposAdv.taxaSaqueMensal / 100;
     const patrimonioNecessario = taxaSaque > 0 ? lacunaRenda / taxaSaque : 0;
@@ -381,6 +388,9 @@ export function calculateToolResult(input: ToolCalculationInput): ToolCalculatio
     if (deficitPatrimonial > 0 && taxaRealMensal > 0) {
       aporteMensalNecessario =
         (deficitPatrimonial * taxaRealMensal) / (Math.pow(1 + taxaRealMensal, mesesAcumulo) - 1);
+    }
+    if (input.advancedMode && aposAdv.aporteMensalAtual > 0) {
+      aporteMensalNecessario = Math.max(0, aporteMensalNecessario - aposAdv.aporteMensalAtual);
     }
 
     const totalAportes = aporteMensalNecessario * mesesAcumulo;

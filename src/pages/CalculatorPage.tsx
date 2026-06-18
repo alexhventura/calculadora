@@ -7,7 +7,6 @@ import {
   DollarSign, 
   Coins, 
   Calculator, 
-  RotateCcw,
   Info,
   Briefcase,
   Calendar,
@@ -41,8 +40,15 @@ import PersonalizeTrigger from '../components/calculator/PersonalizeTrigger';
 import CalculatorAdvancedFields from '../components/calculator/CalculatorAdvancedFields';
 import MethodologyPanel from '../components/calculator/MethodologyPanel';
 import FieldHint from '../components/calculator/FieldHint';
+import HowToUseButton from '../components/calculator/HowToUseButton';
+import HowToUseModal from '../components/calculator/HowToUseModal';
+import CalculatorActionBar from '../components/calculator/CalculatorActionBar';
 import { useCalculatorMode } from '../hooks/useCalculatorMode';
 import { TOOL_GUIDES } from '../config/toolGuides';
+import { HOW_TO_USE } from '../config/howToUse';
+import { FORM_DEFAULTS, defaultAdvancedForTool } from '../constants/defaultFormValues';
+import { exportCalculationPdf } from '../utils/export/exportCalculationPdf';
+import { buildCalculatorPdfPayload } from '../utils/export/buildCalculatorPdf';
 import { calcularPeriodoRescisao } from '../utils/rescisaoDates';
 import {
   DEFAULT_ADVANCED_OPTIONS,
@@ -141,11 +147,13 @@ export default function CalculatorPage({
   const [faturamentoPjStr, setFaturamentoPjStr] = useState<string>('12.000');
 
   // --- Estados do Plano de Aposentadoria ---
-  const [aposentadoriaIdadeAtual, setAposentadoriaIdadeAtual] = useState<number>(30);
+  const [aposentadoriaIdadeAtual, setAposentadoriaIdadeAtual] = useState<number>(35);
   const [aposentadoriaIdadeAlvo, setAposentadoriaIdadeAlvo] = useState<number>(65);
   const [aposentadoriaSalarioAtualStr, setAposentadoriaSalarioAtualStr] = useState<string>('8.000');
   const [aposentadoriaRendaDesejadaStr, setAposentadoriaRendaDesejadaStr] = useState<string>('10.000');
-  const [aposentadoriaPatrimonioAtualStr, setAposentadoriaPatrimonioAtualStr] = useState<string>('50.000');
+  const [aposentadoriaPatrimonioAtualStr, setAposentadoriaPatrimonioAtualStr] = useState<string>('0');
+
+  const [howToUseOpen, setHowToUseOpen] = useState(false);
 
   // --- Estados do Cálculo de Rescisão ---
   const [rescisaoSalarioStr, setRescisaoSalarioStr] = useState<string>('5.000');
@@ -402,16 +410,111 @@ export default function CalculatorPage({
     setTaxaTipo('manual'); // Transiciona para manual caso o usuário mude o número manualmente
   };
 
-  // --- Resetar Campos ---
-  const handleReset = () => {
-    setValorInicialStr('1.000');
-    setAporteMensalStr('500');
-    setTempo(20);
-    setTempoUnidade('anos');
-    setTaxaAnual(10);
-    setTaxaTipo('manual');
-    setTaxaPeriodo('anual');
-  };
+  // --- Limpar todos os dados da ferramenta ativa ---
+  const handleClearData = useCallback(() => {
+    setCalculatorMode('simple');
+    setAdvancedOptions(defaultAdvancedForTool(activeTool));
+
+    switch (activeTool) {
+      case 'juros': {
+        setValorInicialStr(FORM_DEFAULTS.juros.valorInicialStr);
+        setAporteMensalStr(FORM_DEFAULTS.juros.aporteMensalStr);
+        setTempo(FORM_DEFAULTS.juros.tempo);
+        setTempoUnidade(FORM_DEFAULTS.juros.tempoUnidade);
+        setTaxaAnual(FORM_DEFAULTS.juros.taxaAnual);
+        setTaxaTipo(FORM_DEFAULTS.juros.taxaTipo);
+        setTaxaPeriodo(FORM_DEFAULTS.juros.taxaPeriodo);
+        break;
+      }
+      case 'clt-pj': {
+        setSalarioCltStr(FORM_DEFAULTS['clt-pj'].salarioCltStr);
+        setCltVrStr(FORM_DEFAULTS['clt-pj'].cltVrStr);
+        setCltSaudeStr(FORM_DEFAULTS['clt-pj'].cltSaudeStr);
+        setCltOutrosStr(FORM_DEFAULTS['clt-pj'].cltOutrosStr);
+        setFaturamentoPjStr('12.000');
+        break;
+      }
+      case 'aposentadoria': {
+        setAposentadoriaIdadeAtual(FORM_DEFAULTS.aposentadoria.idadeAtual);
+        setAposentadoriaIdadeAlvo(FORM_DEFAULTS.aposentadoria.idadeAlvo);
+        setAposentadoriaSalarioAtualStr(FORM_DEFAULTS.aposentadoria.salarioAtualStr);
+        setAposentadoriaRendaDesejadaStr(FORM_DEFAULTS.aposentadoria.rendaDesejadaStr);
+        setAposentadoriaPatrimonioAtualStr(FORM_DEFAULTS.aposentadoria.patrimonioAtualStr);
+        break;
+      }
+      case 'rescisao': {
+        setRescisaoSalarioStr(FORM_DEFAULTS.rescisao.salarioStr);
+        setRescisaoDataAdmissao(FORM_DEFAULTS.rescisao.dataAdmissao);
+        setRescisaoDataDesligamento(FORM_DEFAULTS.rescisao.dataDesligamento);
+        setRescisaoMotivo(FORM_DEFAULTS.rescisao.motivo);
+        break;
+      }
+    }
+  }, [activeTool, setCalculatorMode]);
+
+  const handleSavePdf = useCallback(async () => {
+    const payload = buildCalculatorPdfPayload({
+      activeTool,
+      toolTitle: activeToolMeta.title,
+      isAdvanced,
+      valorInicialStr,
+      aporteMensalStr,
+      tempo,
+      tempoUnidade,
+      taxaAnual,
+      salarioCltStr,
+      cltVrStr,
+      cltSaudeStr,
+      cltOutrosStr,
+      aposIdadeAtual: aposentadoriaIdadeAtual,
+      aposIdadeAlvo: aposentadoriaIdadeAlvo,
+      aposRendaStr: aposentadoriaRendaDesejadaStr,
+      aposPatrimonioStr: aposentadoriaPatrimonioAtualStr,
+      rescisaoSalarioStr,
+      rescisaoDataAdmissao,
+      rescisaoDataDesligamento,
+      rescisaoMotivo,
+      painelCards: calculoResultado.painelTopCards.map((c) => ({
+        titulo: c.titulo,
+        valor: c.valor,
+        subtitulo: c.subtitulo,
+      })),
+      extraLines:
+        activeTool === 'aposentadoria' && aposentadoriaData
+          ? [
+              { label: 'Anos para acumular', value: `${aposentadoriaData.anosAcumulo} anos` },
+              { label: 'Patrimônio necessário', value: formatBRL(aposentadoriaData.patrimonioNecessario) },
+            ]
+          : activeTool === 'rescisao' && rescisaoData
+            ? [{ label: 'Total rescisão', value: formatBRL(rescisaoData.totalGeral ?? 0) }]
+            : undefined,
+    });
+    await exportCalculationPdf(payload);
+  }, [
+    activeTool,
+    activeToolMeta.title,
+    isAdvanced,
+    valorInicialStr,
+    aporteMensalStr,
+    tempo,
+    tempoUnidade,
+    taxaAnual,
+    salarioCltStr,
+    cltVrStr,
+    cltSaudeStr,
+    cltOutrosStr,
+    aposentadoriaIdadeAtual,
+    aposentadoriaIdadeAlvo,
+    aposentadoriaRendaDesejadaStr,
+    aposentadoriaPatrimonioAtualStr,
+    rescisaoSalarioStr,
+    rescisaoDataAdmissao,
+    rescisaoDataDesligamento,
+    rescisaoMotivo,
+    calculoResultado.painelTopCards,
+    aposentadoriaData,
+    rescisaoData,
+  ]);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 font-sans antialiased text-slate-950 overflow-x-hidden">
@@ -615,6 +718,8 @@ export default function CalculatorPage({
               {/* Decoration Line Top */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-[#800020]"></div>
 
+              <HowToUseButton onClick={() => setHowToUseOpen(true)} />
+
               {activeTool === 'juros' && (
                 <>
                   <div className="flex items-center justify-between border-b border-slate-50 pb-3">
@@ -622,15 +727,6 @@ export default function CalculatorPage({
                       <Calculator className="w-5 h-5 text-[#800020]" />
                       Simule seu investimento
                     </h2>
-                    <button 
-                      type="button" 
-                      onClick={handleReset}
-                      className="p-1 text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-all cursor-pointer"
-                      title="Reiniciar Simulação"
-                      aria-label="Reiniciar simulação"
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                    </button>
                   </div>
 
                   {/* Campo: Valor Inicial */}
@@ -891,6 +987,24 @@ export default function CalculatorPage({
                       />
                     </div>
                   </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-slate-700 flex items-center">
+                      Quanto já guardou (R$)
+                      <FieldHint text="Patrimônio que você já possui investido. Deixe zero se ainda não guardou." />
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={aposentadoriaPatrimonioAtualStr}
+                        onChange={(e) => setAposentadoriaPatrimonioAtualStr(formatMilhar(e.target.value))}
+                        className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
                 </>
               )}
 
@@ -980,6 +1094,8 @@ export default function CalculatorPage({
                 isAdvanced={isAdvanced}
                 onOpen={() => setCalculatorMode('advanced')}
                 onClose={() => setCalculatorMode('simple')}
+                openLabel={activeTool === 'aposentadoria' ? 'Modo completo' : undefined}
+                closeLabel={activeTool === 'aposentadoria' ? '← Voltar ao modo simples' : undefined}
               />
 
               {isAdvanced && (
@@ -1005,15 +1121,15 @@ export default function CalculatorPage({
                   aposentadoriaUi={
                     activeTool === 'aposentadoria'
                       ? {
-                          patrimonioStr: aposentadoriaPatrimonioAtualStr,
                           salarioStr: aposentadoriaSalarioAtualStr,
-                          onPatrimonioChange: setAposentadoriaPatrimonioAtualStr,
                           onSalarioChange: setAposentadoriaSalarioAtualStr,
                         }
                       : undefined
                   }
                 />
               )}
+
+              <CalculatorActionBar onClear={handleClearData} onSavePdf={handleSavePdf} />
 
           </div>
 
@@ -1552,6 +1668,12 @@ export default function CalculatorPage({
       <AdSlotFooter />
 
       <SiteFooter disclaimer="As taxas exibidas são de caráter informativo com base em indicadores macroeconômicos. Retornos passados não garantem rendimentos futuros. Os resultados aqui providos são estimativas matemáticas com base em aportes regulares constantes, não representando de forma alguma assessoria ou recomendação individualizada de investimentos financeiros." />
+
+      <HowToUseModal
+        open={howToUseOpen}
+        onClose={() => setHowToUseOpen(false)}
+        content={HOW_TO_USE[activeTool]}
+      />
 
     </div>
   );

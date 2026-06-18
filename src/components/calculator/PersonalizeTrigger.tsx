@@ -5,6 +5,8 @@ interface PersonalizeTriggerProps {
   onOpen: () => void;
   onClose: () => void;
   advancedSectionId?: string;
+  openLabel?: string;
+  closeLabel?: string;
 }
 
 export default function PersonalizeTrigger({
@@ -12,6 +14,8 @@ export default function PersonalizeTrigger({
   onOpen,
   onClose,
   advancedSectionId = 'personalizar-calculo',
+  openLabel = 'Personalizar cálculo',
+  closeLabel = '← Voltar ao cálculo rápido',
 }: PersonalizeTriggerProps) {
   if (isAdvanced) {
     return (
@@ -20,7 +24,7 @@ export default function PersonalizeTrigger({
         onClick={onClose}
         className="w-full text-center text-[11px] font-semibold text-slate-500 hover:text-[#800020] py-2 transition-colors cursor-pointer"
       >
-        ← Voltar ao cálculo rápido
+        {closeLabel}
       </button>
     );
   }
@@ -37,7 +41,7 @@ export default function PersonalizeTrigger({
       className="w-full flex items-center justify-center gap-1.5 text-[11px] font-bold text-[#800020] hover:text-[#600018] py-2.5 px-3 rounded-xl border border-dashed border-[#800020]/25 hover:border-[#800020]/40 hover:bg-rose-50/40 transition-all cursor-pointer min-h-[2.75rem]"
     >
       <Settings2 className="w-3.5 h-3.5" aria-hidden="true" />
-      Personalizar cálculo
+      {openLabel}
     </button>
   );
 }

@@ -34,9 +34,7 @@ interface JurosAdvancedUiProps {
 }
 
 interface AposentadoriaAdvancedUiProps {
-  patrimonioStr: string;
   salarioStr: string;
-  onPatrimonioChange: (s: string) => void;
   onSalarioChange: (s: string) => void;
 }
 
@@ -309,29 +307,47 @@ export default function CalculatorAdvancedFields({
     return (
       <AdvancedSection defaultOpen={defaultOpen} id={sectionId}>
         {aposentadoriaUi && (
-          <>
-            <div className="flex flex-col gap-1">
-              <FieldLabel hint="Quanto você já tem guardado hoje.">Quanto já guardou (R$)</FieldLabel>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={aposentadoriaUi.patrimonioStr}
-                onChange={(e) => aposentadoriaUi.onPatrimonioChange(formatMilhar(e.target.value))}
-                className={inputClass}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <FieldLabel hint="Usado na projeção por salário atual.">Salário atual (R$)</FieldLabel>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={aposentadoriaUi.salarioStr}
-                onChange={(e) => aposentadoriaUi.onSalarioChange(formatMilhar(e.target.value))}
-                className={inputClass}
-              />
-            </div>
-          </>
+          <div className="flex flex-col gap-1">
+            <FieldLabel hint="Usado na projeção por salário atual.">Salário atual (R$)</FieldLabel>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={aposentadoriaUi.salarioStr}
+              onChange={(e) => aposentadoriaUi.onSalarioChange(formatMilhar(e.target.value))}
+              className={inputClass}
+            />
+          </div>
         )}
+        <div className="flex flex-col gap-1">
+          <FieldLabel hint="Se souber o valor exato do INSS ou previdência, informe aqui.">
+            Benefício mensal manual (R$)
+          </FieldLabel>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={a.beneficioMensalManual != null ? formatMilhar(String(a.beneficioMensalManual)) : ''}
+            onChange={(e) => {
+              const raw = e.target.value.replace(/\D/g, '');
+              patchApos({ beneficioMensalManual: raw ? parseFloat(raw) : null });
+            }}
+            placeholder="Deixe vazio para estimativa automática"
+            className={inputClass}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <FieldLabel hint="Quanto você já guarda por mês hoje; será descontado do aporte necessário.">
+            Quanto já guarda por mês (R$)
+          </FieldLabel>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={formatMilhar(String(a.aporteMensalAtual))}
+            onChange={(e) =>
+              patchApos({ aporteMensalAtual: parseFloat(e.target.value.replace(/\D/g, '')) || 0 })
+            }
+            className={inputClass}
+          />
+        </div>
         <div className="flex flex-col gap-1">
           <FieldLabel>Tipo de benefício</FieldLabel>
           <select

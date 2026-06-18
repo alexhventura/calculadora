@@ -36,6 +36,8 @@ export interface AposentadoriaAdvancedOptions {
   cenario: CenarioInvestimento;
   taxaRealPersonalizada: number;
   taxaSaqueMensal: number;
+  beneficioMensalManual: number | null;
+  aporteMensalAtual: number;
 }
 
 export interface RescisaoAdvancedOptions {
@@ -84,6 +86,8 @@ export const DEFAULT_APOSENTADORIA_ADVANCED: AposentadoriaAdvancedOptions = {
   cenario: 'moderado',
   taxaRealPersonalizada: 5,
   taxaSaqueMensal: 0.35,
+  beneficioMensalManual: null,
+  aporteMensalAtual: 0,
 };
 
 export const DEFAULT_RESCISAO_ADVANCED: RescisaoAdvancedOptions = {
