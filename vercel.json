@@ -1,17 +1,22 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "ENABLE_PRERENDER=1 npm run build",
   "outputDirectory": "dist",
-  "installCommand": "npm install",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "installCommand": "npm install && npx playwright install chromium",
   "redirects": [
     { "source": "/juros-compostos", "destination": "/", "permanent": true },
     { "source": "/contato", "destination": "/sobre", "permanent": true },
-    { "source": "/calculadora/juros-compostos", "destination": "/juros-compostos", "permanent": true },
+    { "source": "/calculadora/juros-compostos", "destination": "/", "permanent": true },
     { "source": "/calculadora/clt-vs-pj", "destination": "/clt-pj", "permanent": true },
     { "source": "/calculadora/aposentadoria", "destination": "/aposentadoria", "permanent": true },
     { "source": "/calculadora/rescisao-trabalhista", "destination": "/rescisao-trabalhista", "permanent": true }
   ],
   "headers": [
+    {
+      "source": "/404.html",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [
@@ -19,6 +24,8 @@
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=()" },
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://api.bcb.gov.br https://economia.awesomeapi.com.br https://cdn.jsdelivr.net https://latest.currency-api.pages.dev; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" },
         { "key": "X-Robots-Tag", "value": "index, follow" }
       ]
     }

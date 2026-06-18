@@ -211,7 +211,7 @@ export const INSTITUTIONAL_PAGES: Record<string, InstitutionalContent> = {
     relatedTools: [
       {
         label: 'Juros Compostos',
-        href: ROUTES.jurosCompostos,
+        href: ROUTES.home,
         description: 'Simule patrimônio com aportes e compare indexadores.',
       },
       {
@@ -387,7 +387,7 @@ export const INSTITUTIONAL_PAGES: Record<string, InstitutionalContent> = {
     ],
     sources: [SOURCES.BCB, SOURCES.CVM, SOURCES.CLT, SOURCES.INSS, SOURCES.RECEITA],
     relatedTools: [
-      { label: 'Juros Compostos', href: ROUTES.jurosCompostos, description: 'Leia as premissas na página da ferramenta.' },
+      { label: 'Juros Compostos', href: ROUTES.home, description: 'Leia as premissas na página da ferramenta.' },
       { label: 'Rescisão CLT', href: ROUTES.rescisao, description: 'Verbas sujeitas a limitações documentadas.' },
       { label: 'Aposentadoria', href: ROUTES.aposentadoria, description: 'Projeção, não promessa de benefício.' },
       { label: 'Calculadora IPCA', href: ROUTES.calculadoraIpca, description: 'Inflação oficial como referência.' },

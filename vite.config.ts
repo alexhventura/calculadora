@@ -14,6 +14,11 @@ export default defineConfig(() => ({
     target: 'es2022',
     cssMinify: true,
     minify: 'esbuild' as const,
+    modulePreload: {
+      polyfill: false,
+      resolveDependencies: (_filename, deps) =>
+        deps.filter((dep) => !dep.includes('pdf-') && !dep.includes('jspdf')),
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {

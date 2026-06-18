@@ -37,7 +37,7 @@ export const SLUG_TO_TOOL: Record<string, ActiveTool> = {
 
 /** Caminhos canônicos curtos por ferramenta (SEO) */
 export const TOOL_CANONICAL_PATH: Record<ActiveTool, string> = {
-  juros: ROUTES.jurosCompostos,
+  juros: ROUTES.home,
   'clt-pj': ROUTES.cltPj,
   aposentadoria: ROUTES.aposentadoria,
   rescisao: ROUTES.rescisao,

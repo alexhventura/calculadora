@@ -80,7 +80,7 @@ export const calculadoraIpcaContent: ToolSeoContent = {
     },
     {
       label: 'Juros Compostos',
-      href: ROUTES.jurosCompostos,
+      href: ROUTES.home,
       description: 'Calculadora completa de juros compostos.',
     },
     {

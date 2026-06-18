@@ -197,7 +197,7 @@ export const aposentadoriaHub: HubContentBase = {
   sources: [SOURCES_INSS, SOURCES_PREVIDENCIA, SOURCES_BCB],
   relatedTools: [
     { label: 'Calculadora de Aposentadoria', href: ROUTES.aposentadoria, description: 'Estime patrimônio necessário, lacuna de renda e aportes mensais.' },
-    { label: 'Juros Compostos', href: ROUTES.jurosCompostos, description: 'Simule crescimento do patrimônio com aportes ao longo de décadas.' },
+    { label: 'Juros Compostos', href: ROUTES.home, description: 'Simule crescimento do patrimônio com aportes ao longo de décadas.' },
     { label: 'Calculadora IPCA', href: ROUTES.calculadoraIpca, description: 'Projete o impacto da inflação na sua meta de aposentadoria.' },
   ],
   relatedCategories: [

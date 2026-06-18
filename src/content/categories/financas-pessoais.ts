@@ -205,7 +205,7 @@ export const financasPessoaisHub: HubContentBase = {
   ],
   sources: [SOURCES_BCB, SOURCES_CVM],
   relatedTools: [
-    { label: 'Juros Compostos', href: ROUTES.jurosCompostos, description: 'Simule metas de patrimônio com aportes mensais e taxas de mercado.' },
+    { label: 'Juros Compostos', href: ROUTES.home, description: 'Simule metas de patrimônio com aportes mensais e taxas de mercado.' },
     { label: 'Calculadora IPCA', href: ROUTES.calculadoraIpca, description: 'Veja como a inflação afeta seu poder de compra ao longo do tempo.' },
     { label: 'Aposentadoria', href: ROUTES.aposentadoria, description: 'Planeje complemento de renda para a aposentadoria com simulações.' },
   ],

@@ -6,7 +6,7 @@ export const SITE_AUTHOR = `Equipe ${SITE_DOMAIN}`;
 export const SITE_DESCRIPTION =
   'Calculadora de juros compostos completa com comparativo Poupança vs Selic/CDI, conversor de moedas, simulador CLT vs PJ, aposentadoria e rescisão trabalhista.';
 
-export const SITE_OG_IMAGE = `${SITE_URL}/favicon.svg`;
+export const SITE_OG_IMAGE = `${SITE_URL}/og-image.png`;
 
 export const SITE_KEYWORDS = [
   'juros compostos',

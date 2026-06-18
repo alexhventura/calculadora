@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { INDEXABLE_PATHS } from './routes.mjs';
@@ -40,13 +40,28 @@ function outputPath(route) {
   return join(distDir, route.slice(1), 'index.html');
 }
 
+async function prerenderRoute(context, route) {
+  const page = await context.newPage();
+  await page.goto(`${BASE}${route}`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForSelector('#root', { state: 'attached', timeout: 15000 });
+  await page.waitForFunction(
+    () => document.querySelector('#root')?.innerHTML.trim().length > 100,
+    { timeout: 30000 },
+  );
+  const html = await page.content();
+  const out = outputPath(route);
+  mkdirSync(dirname(out), { recursive: true });
+  writeFileSync(out, html, 'utf8');
+  console.log(`[prerender] ${route}`);
+  await page.close();
+}
+
 async function main() {
   if (process.env.SKIP_PRERENDER === '1') {
     console.log('[prerender] SKIP_PRERENDER=1 — ignorado');
     return;
   }
 
-  // Vercel/CI: prerender exige Chromium; sem ele o SPA funciona normalmente.
   if (process.env.VERCEL === '1' && process.env.ENABLE_PRERENDER !== '1') {
     console.log('[prerender] ignorado na Vercel (defina ENABLE_PRERENDER=1 + playwright install chromium para ativar)');
     return;
@@ -76,25 +91,25 @@ async function main() {
     const context = await browser.newContext();
 
     for (const route of INDEXABLE_PATHS) {
-      const page = await context.newPage();
-      await page.goto(`${BASE}${route}`, { waitUntil: 'networkidle', timeout: 60000 });
-      await page.waitForSelector('#root', { state: 'attached', timeout: 15000 });
-      await page.waitForFunction(
-        () => document.querySelector('#root')?.innerHTML.trim().length > 100,
-        { timeout: 30000 },
-      );
-      const html = await page.content();
-      const out = outputPath(route);
-      mkdirSync(dirname(out), { recursive: true });
-      writeFileSync(out, html, 'utf8');
-      console.log(`[prerender] ${route}`);
-      await page.close();
+      await prerenderRoute(context, route);
     }
 
+    await prerenderRoute(context, '/404');
+    const notFoundHtml = readFileSync(outputPath('/404'), 'utf8');
+    writeFileSync(join(distDir, '404.html'), notFoundHtml, 'utf8');
+    console.log('[prerender] /404 → 404.html');
+
     await browser.close();
-    console.log(`[prerender] ${INDEXABLE_PATHS.length} páginas geradas`);
+    console.log(`[prerender] ${INDEXABLE_PATHS.length + 1} páginas geradas`);
   } finally {
     server.kill('SIGTERM');
+    setTimeout(() => {
+      try {
+        server.kill('SIGKILL');
+      } catch {
+        /* already stopped */
+      }
+    }, 3000).unref?.();
   }
 }
 

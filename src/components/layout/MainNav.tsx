@@ -27,7 +27,7 @@ export default function MainNav({ current }: MainNavProps) {
   const isCalculadoras =
     current === 'calculadoras' ||
     (current === undefined &&
-      (location.pathname === ROUTES.home || location.pathname === ROUTES.jurosCompostos));
+      (location.pathname === ROUTES.home));
 
   const isOutras =
     current === 'outras' ||
@@ -35,7 +35,6 @@ export default function MainNav({ current }: MainNavProps) {
 
   const outrasHref =
     location.pathname === ROUTES.home ||
-    location.pathname === ROUTES.jurosCompostos ||
     OUTRAS_TOOL_PATHS.has(location.pathname)
       ? '#bento-selector'
       : `${ROUTES.home}#bento-selector`;

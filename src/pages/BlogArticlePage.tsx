@@ -1,4 +1,5 @@
-import { Link, useParams, Navigate } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import NotFoundPage from './NotFoundPage';
 import PageMeta from '../components/seo/PageMeta';
 import StructuredData from '../components/seo/StructuredData';
 import Breadcrumbs from '../components/layout/Breadcrumbs';
@@ -14,7 +15,7 @@ export default function BlogArticlePage() {
   const { slug } = useParams<{ slug: string }>();
   const article = slug ? getBlogArticle(slug) : undefined;
 
-  if (!article) return <Navigate to={ROUTES.blog} replace />;
+  if (!article) return <NotFoundPage />;
 
   const url = `${SITE_URL}${ROUTES.blogPost(article.slug)}`;
 

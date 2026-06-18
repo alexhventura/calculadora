@@ -1,3 +1,4 @@
+import { MAX_SIMULATION_MONTHS } from '../constants/limits';
 import { RegistroMensal, ResultadosTotais, TempoUnidade, MoedaTipo } from '../types';
 import type { AporteFrequencia, JurosAdvancedOptions } from '../types/calculator';
 import { DEFAULT_JUROS_ADVANCED } from '../types/calculator';
@@ -84,10 +85,10 @@ export function calcularJurosCompostos(
   const valInicialClean = isNaN(valorInicial) || valorInicial < 0 ? 0 : valorInicial;
   const aporteMensalClean = isNaN(aporteMensal) || aporteMensal < 0 ? 0 : aporteMensal;
   const tempoCleanRaw = isNaN(tempo) || tempo < 0 ? 0 : tempo;
-  const tempoClean = Math.min(600, tempoCleanRaw); // Evita loop infinito por tempo absurdo
   const taxaAnualClean = isNaN(taxaAnual) || taxaAnual < 0 ? 0 : taxaAnual;
 
-  const totalMeses = tempoUnidade === 'anos' ? Math.round(tempoClean * 12) : Math.round(tempoClean);
+  const totalMesesRaw = tempoUnidade === 'anos' ? Math.round(tempoCleanRaw * 12) : Math.round(tempoCleanRaw);
+  const totalMeses = Math.min(MAX_SIMULATION_MONTHS, totalMesesRaw);
   
   const iMesUserRaw = taxaMensalFromInput(
     taxaAnualClean,

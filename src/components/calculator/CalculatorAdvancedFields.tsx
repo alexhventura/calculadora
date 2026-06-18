@@ -456,7 +456,7 @@ export default function CalculatorAdvancedFields({
               <input
                 type="number"
                 min="1"
-                max="600"
+                max={6000}
                 value={r.mesesManual}
                 onChange={(e) => patchRescisao({ mesesManual: parseInt(e.target.value) || 1 })}
                 className={inputClass}

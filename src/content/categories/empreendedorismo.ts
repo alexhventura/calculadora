@@ -143,7 +143,7 @@ export const empreendedorismoHub: HubContentBase = {
   sources: [SOURCES_SEBRAE, SOURCES_RECEITA, SOURCES_GOV],
   relatedTools: [
     { label: 'CLT vs PJ', href: ROUTES.cltPj, description: 'Compare salário CLT com faturamento PJ equivalente.' },
-    { label: 'Juros Compostos', href: ROUTES.jurosCompostos, description: 'Projete reservas e investimentos do negócio.' },
+    { label: 'Juros Compostos', href: ROUTES.home, description: 'Projete reservas e investimentos do negócio.' },
     { label: 'Rescisão Trabalhista', href: ROUTES.rescisao, description: 'Calcule verbas ao desligar colaboradores CLT.' },
   ],
   relatedCategories: [

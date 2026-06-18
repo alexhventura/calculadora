@@ -1,4 +1,5 @@
-import { Link, useParams, Navigate } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import NotFoundPage from './NotFoundPage';
 import PageMeta from '../components/seo/PageMeta';
 import StructuredData from '../components/seo/StructuredData';
 import Breadcrumbs from '../components/layout/Breadcrumbs';
@@ -19,7 +20,7 @@ export default function CategoryPage() {
   const category = slug ? getCategoryBySlug(slug) : undefined;
   const hub = slug ? getCategoryHub(slug) : undefined;
 
-  if (!category) return <Navigate to={ROUTES.home} replace />;
+  if (!category) return <NotFoundPage />;
 
   const path = ROUTES.categoria(category.slug);
   const readTime = hub ? estimateReadTime(hub) : undefined;

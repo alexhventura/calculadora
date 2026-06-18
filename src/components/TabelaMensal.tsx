@@ -174,7 +174,7 @@ export default function TabelaMensal({ registros }: TabelaMensalProps) {
                     <td className="py-2.5 px-4 text-slate-600 font-medium">
                       {formatCurrency(reg.totalInvestido)}
                     </td>
-                    <td className="py-2.5 px-4 text-emerald-600 font-medium">
+                    <td className="py-2.5 px-4 text-emerald-700 font-medium">
                       {formatCurrency(reg.jurosDoMesUser)}
                     </td>
                     <td className="py-2.5 px-4 text-emerald-700 font-medium">

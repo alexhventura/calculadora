@@ -37,9 +37,9 @@ describe('calcularJurosCompostos', () => {
     expect(totais.totalInvestidoUser).toBe(0);
   });
 
-  it('limita tempo máximo a 600 períodos', () => {
-    const { registros } = calcularJurosCompostos(1000, 0, 601, 'meses', 10, 'anual');
-    expect(registros.length).toBeLessThanOrEqual(601);
+  it('limita simulação a MAX_SIMULATION_MONTHS por segurança', () => {
+    const { registros } = calcularJurosCompostos(1000, 0, 99999, 'meses', 10, 'anual');
+    expect(registros.length).toBeLessThanOrEqual(7201);
   });
 });
 

@@ -75,7 +75,7 @@ export const calculadoraCdiContent: ToolSeoContent = {
   relatedTools: [
     {
       label: 'Juros Compostos',
-      href: ROUTES.jurosCompostos,
+      href: ROUTES.home,
       description: 'Calculadora completa com Poupança, Selic e CDI.',
     },
     {

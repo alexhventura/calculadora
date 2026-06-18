@@ -21,7 +21,7 @@ export const FISCAL_CONFIG = {
     multaSemJusta: 0.4,
     multaAcordo: 0.2,
     fgtsPercentual: 0.08,
-    maxMeses: 600,
+    maxMeses: 6000,
   },
   cenariosRendimento: {
     conservador: 0.03,

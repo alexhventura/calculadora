@@ -42,8 +42,6 @@ import MethodologyPanel from '../components/calculator/MethodologyPanel';
 import { useCalculatorMode } from '../hooks/useCalculatorMode';
 import { CONVERSOR_GUIDE } from '../config/toolGuides';
 import { CONVERSOR_HOW_TO_USE } from '../config/howToUse';
-import { exportCalculationPdf } from '../utils/export/exportCalculationPdf';
-import { buildConversorPdfPayload } from '../utils/export/buildCalculatorPdf';
 import { QUOTE_TYPES, applyQuoteTypeToRates, type QuoteType } from '../constants/quoteTypes';
 
 const ToolSeoContent = lazy(() => import('../components/content/ToolSeoContent'));
@@ -61,7 +59,7 @@ function pctBadge(pct: number | null) {
   return (
     <span
       className={`inline-flex items-center gap-0.5 text-[10px] font-bold font-mono ${
-        up ? 'text-emerald-600' : 'text-rose-600'
+        up ? 'text-emerald-700' : 'text-rose-600'
       }`}
     >
       <Icon className="w-3 h-3" aria-hidden="true" />
@@ -150,6 +148,10 @@ export default function CurrencyConverterPage() {
   }, [setCalculatorMode]);
 
   const handleSavePdf = useCallback(async () => {
+    const [{ buildConversorPdfPayload }, { exportCalculationPdf }] = await Promise.all([
+      import('../utils/export/buildCalculatorPdf'),
+      import('../utils/export/exportCalculationPdf'),
+    ]);
     const rateFrom = effectiveRates[from] ?? 0;
     const rateTo = effectiveRates[to] ?? 1;
     const pairRate = from === 'BRL' ? 1 / rateTo : to === 'BRL' ? rateFrom : rateFrom / rateTo;

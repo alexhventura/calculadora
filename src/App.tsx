@@ -1,13 +1,14 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import SiteLayout from './components/layout/SiteLayout';
 import ScrollToTop from './components/layout/ScrollToTop';
-import CalculatorPage from './pages/CalculatorPage';
-import { ROUTES } from './constants/routes';
+import NotFoundPage from './pages/NotFoundPage';
+import { ROUTES, SLUG_TO_TOOL } from './constants/routes';
 import type { ActiveTool } from './utils/calculations/toolCalculations';
 import type { SeoVariant } from './content/tools';
 import type { TaxaTipo } from './types';
 
+const CalculatorPage = lazy(() => import('./pages/CalculatorPage'));
 const BlogListPage = lazy(() => import('./pages/BlogListPage'));
 const BlogArticlePage = lazy(() => import('./pages/BlogArticlePage'));
 const CategoryPage = lazy(() => import('./pages/CategoryPage'));
@@ -29,7 +30,19 @@ interface CalcProps {
 }
 
 function Calc({ tool, seoVariant, initialTaxaTipo }: CalcProps) {
-  return <CalculatorPage initialTool={tool} seoVariant={seoVariant} initialTaxaTipo={initialTaxaTipo} />;
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <CalculatorPage initialTool={tool} seoVariant={seoVariant} initialTaxaTipo={initialTaxaTipo} />
+    </Suspense>
+  );
+}
+
+function LegacyCalculadoraRoute() {
+  const { slug } = useParams<{ slug: string }>();
+  if (!slug || !SLUG_TO_TOOL[slug]) {
+    return <NotFoundPage />;
+  }
+  return <Calc tool={SLUG_TO_TOOL[slug]} />;
 }
 
 export default function App() {
@@ -38,7 +51,7 @@ export default function App() {
       <ScrollToTop />
       <Routes>
         <Route path={ROUTES.home} element={<Calc tool="juros" />} />
-        <Route path={ROUTES.jurosCompostos} element={<Calc tool="juros" />} />
+        <Route path={ROUTES.jurosCompostos} element={<Navigate to={ROUTES.home} replace />} />
         <Route path={ROUTES.calculadoraCdi} element={<Calc tool="juros" seoVariant="cdi" initialTaxaTipo="cdi" />} />
         <Route path={ROUTES.calculadoraIpca} element={<Calc tool="juros" seoVariant="ipca" />} />
         <Route path={ROUTES.cltPj} element={<Calc tool="clt-pj" />} />
@@ -52,7 +65,7 @@ export default function App() {
             </Suspense>
           }
         />
-        <Route path="/calculadora/:slug" element={<Calc />} />
+        <Route path="/calculadora/:slug" element={<LegacyCalculadoraRoute />} />
 
         <Route element={<SiteLayout />}>
           <Route
@@ -86,7 +99,8 @@ export default function App() {
           <Route path={ROUTES.isencao} element={<Suspense fallback={<PageFallback />}><InstitutionalPage pageKey="isencao" /></Suspense>} />
         </Route>
 
-        <Route path="*" element={<Navigate to={ROUTES.home} replace />} />
+        <Route path="/404" element={<NotFoundPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );

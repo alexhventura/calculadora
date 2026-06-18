@@ -180,7 +180,7 @@ export const investimentosHub: HubContentBase = {
   ],
   sources: [SOURCES_BCB, SOURCES_CVM, SOURCES_TESOURO, SOURCES_B3],
   relatedTools: [
-    { label: 'Juros Compostos', href: ROUTES.jurosCompostos, description: 'Simule patrimônio com aportes e compare Poupança, Selic e CDI.' },
+    { label: 'Juros Compostos', href: ROUTES.home, description: 'Simule patrimônio com aportes e compare Poupança, Selic e CDI.' },
     { label: 'Calculadora CDI', href: ROUTES.calculadoraCdi, description: 'Projete rendimento com taxa CDI atualizada.' },
     { label: 'Calculadora IPCA', href: ROUTES.calculadoraIpca, description: 'Veja o impacto da inflação no poder de compra.' },
     { label: 'Aposentadoria', href: ROUTES.aposentadoria, description: 'Planeje complemento ao INSS com juros compostos.' },

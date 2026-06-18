@@ -199,7 +199,7 @@ export const LEGAL_PRIVACIDADE: InstitutionalContent = {
     { term: 'Dado anonimizado', definition: 'Informação que não permite identificação do titular, consideradas as meios técnicas disponíveis.' },
   ],
   sources: [SOURCES.ANPD, SOURCES.GOV, SOURCES.BCB],
-  relatedTools: [{ label: 'Juros Compostos', href: ROUTES.jurosCompostos, description: 'Cálculo 100% local no navegador.' }],
+  relatedTools: [{ label: 'Juros Compostos', href: ROUTES.home, description: 'Cálculo 100% local no navegador.' }],
   relatedCategories: [{ label: 'Finanças Pessoais', href: ROUTES.categoria('financas-pessoais') }],
 };
 
@@ -349,7 +349,7 @@ export const LEGAL_TERMOS: InstitutionalContent = {
   glossary: [],
   sources: [SOURCES.GOV, SOURCES.CVM, SOURCES.ANPD],
   relatedTools: [
-    { label: 'Juros Compostos', href: ROUTES.jurosCompostos, description: 'Sujeita às limitações destes termos.' },
+    { label: 'Juros Compostos', href: ROUTES.home, description: 'Sujeita às limitações destes termos.' },
     { label: 'CLT vs PJ', href: ROUTES.cltPj, description: 'Simulação educativa, não parecer fiscal.' },
   ],
 };

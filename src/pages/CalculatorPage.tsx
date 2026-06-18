@@ -38,17 +38,15 @@ import { calculateToolResult } from '../utils/calculations/toolCalculations';
 import ToolQuickGuide from '../components/calculator/ToolQuickGuide';
 import PersonalizeTrigger from '../components/calculator/PersonalizeTrigger';
 import CalculatorAdvancedFields from '../components/calculator/CalculatorAdvancedFields';
-import MethodologyPanel from '../components/calculator/MethodologyPanel';
+const MethodologyPanel = lazy(() => import('../components/calculator/MethodologyPanel'));
 import FieldHint from '../components/calculator/FieldHint';
 import HowToUseButton from '../components/calculator/HowToUseButton';
-import HowToUseModal from '../components/calculator/HowToUseModal';
+const HowToUseModal = lazy(() => import('../components/calculator/HowToUseModal'));
 import CalculatorActionBar from '../components/calculator/CalculatorActionBar';
 import { useCalculatorMode } from '../hooks/useCalculatorMode';
 import { TOOL_GUIDES } from '../config/toolGuides';
 import { HOW_TO_USE } from '../config/howToUse';
 import { EMPTY_FORM_VALUES, emptyAdvancedForTool } from '../constants/defaultFormValues';
-import { exportCalculationPdf } from '../utils/export/exportCalculationPdf';
-import { buildCalculatorPdfPayload } from '../utils/export/buildCalculatorPdf';
 import { calcularPeriodoRescisao } from '../utils/rescisaoDates';
 import {
   DEFAULT_ADVANCED_OPTIONS,
@@ -453,6 +451,10 @@ export default function CalculatorPage({
   }, [activeTool, setCalculatorMode]);
 
   const handleSavePdf = useCallback(async () => {
+    const [{ buildCalculatorPdfPayload }, { exportCalculationPdf }] = await Promise.all([
+      import('../utils/export/buildCalculatorPdf'),
+      import('../utils/export/exportCalculationPdf'),
+    ]);
     const payload = buildCalculatorPdfPayload(
       {
         activeTool,
@@ -758,7 +760,7 @@ export default function CalculatorPage({
                         id="valor-inicial-range"
                         type="range"
                         min="0"
-                        max="500000"
+                        max={Math.max(500000, valorInicialNum || 0)}
                         step="5000"
                         value={valorInicialNum}
                         onChange={(e) => setValorInicialStr(formatMilhar(e.target.value))}
@@ -790,7 +792,7 @@ export default function CalculatorPage({
                         id="aporte-mensal-range"
                         type="range"
                         min="0"
-                        max="20000"
+                        max={Math.max(20000, aporteMensalNum || 0)}
                         step="100"
                         value={aporteMensalNum}
                         onChange={(e) => setAporteMensalStr(formatMilhar(e.target.value))}
@@ -810,7 +812,7 @@ export default function CalculatorPage({
                         id="tempo-periodo"
                         type="number"
                         value={tempo || ''}
-                        onChange={(e) => setTempo(Math.min(600, Math.max(0, parseInt(e.target.value) || 0)))}
+                        onChange={(e) => setTempo(Math.max(0, parseInt(e.target.value) || 0))}
                         className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                         placeholder="0"
                       />
@@ -945,8 +947,8 @@ export default function CalculatorPage({
                     <input
                       id="aposentadoria-idade-atual"
                       type="range"
-                      min="18"
-                      max="85"
+                      min="1"
+                      max="120"
                       value={aposentadoriaIdadeAtual}
                       onChange={(e) => setAposentadoriaIdadeAtual(parseInt(e.target.value))}
                       aria-label="Idade atual"
@@ -966,8 +968,8 @@ export default function CalculatorPage({
                     <input
                       id="aposentadoria-idade-alvo"
                       type="range"
-                      min={Math.max(40, aposentadoriaIdadeAtual + 1)}
-                      max="100"
+                      min={Math.max(2, aposentadoriaIdadeAtual + 1)}
+                      max="120"
                       value={aposentadoriaIdadeAlvo}
                       onChange={(e) => setAposentadoriaIdadeAlvo(parseInt(e.target.value))}
                       aria-label="Idade alvo para aposentadoria"
@@ -1358,7 +1360,7 @@ export default function CalculatorPage({
                           </div>
                           <div className="flex justify-between py-1.5 border-b border-slate-50">
                             <span className="text-slate-500">Soma de Benefícios (VA/VR + Saúde + Outros)</span>
-                            <span className="font-semibold text-emerald-600 font-mono">+{formatBRL(cltData.beneficiosMensais)}</span>
+                            <span className="font-semibold text-emerald-700 font-mono">+{formatBRL(cltData.beneficiosMensais)}</span>
                           </div>
                           <div className="flex justify-between py-1.5">
                             <span className="text-slate-500">FGTS Provisionado (Equiv. Mensal)</span>
@@ -1505,7 +1507,7 @@ export default function CalculatorPage({
 
                         <div className="flex justify-between py-1 text-slate-600">
                           <span>Rendimento Estimado do Saldo Atual</span>
-                          <span className="font-bold font-mono text-emerald-600">+{formatBRL(aposentadoriaData.patrimonioAtualFuturo)}</span>
+                          <span className="font-bold font-mono text-emerald-700">+{formatBRL(aposentadoriaData.patrimonioAtualFuturo)}</span>
                         </div>
                       </div>
                     </div>
@@ -1663,7 +1665,9 @@ export default function CalculatorPage({
         </div>
 
         <div className="mt-8 px-3 md:px-5 lg:px-7">
-          <MethodologyPanel toolId={activeTool} liveParams={methodologyLiveParams} />
+          <Suspense fallback={null}>
+            <MethodologyPanel toolId={activeTool} liveParams={methodologyLiveParams} />
+          </Suspense>
         </div>
 
         <Suspense fallback={null}>
@@ -1675,11 +1679,13 @@ export default function CalculatorPage({
 
       <SiteFooter disclaimer="As taxas exibidas são de caráter informativo com base em indicadores macroeconômicos. Retornos passados não garantem rendimentos futuros. Os resultados aqui providos são estimativas matemáticas com base em aportes regulares constantes, não representando de forma alguma assessoria ou recomendação individualizada de investimentos financeiros." />
 
-      <HowToUseModal
-        open={howToUseOpen}
-        onClose={() => setHowToUseOpen(false)}
-        content={HOW_TO_USE[activeTool]}
-      />
+      <Suspense fallback={null}>
+        <HowToUseModal
+          open={howToUseOpen}
+          onClose={() => setHowToUseOpen(false)}
+          content={HOW_TO_USE[activeTool]}
+        />
+      </Suspense>
 
     </div>
   );
