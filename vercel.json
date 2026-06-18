@@ -17,7 +17,6 @@
     { "source": "/calculadora/rescisao-trabalhista", "destination": "/rescisao-trabalhista", "permanent": true }
   ],
   "rewrites": [
-    { "handle": "filesystem" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
