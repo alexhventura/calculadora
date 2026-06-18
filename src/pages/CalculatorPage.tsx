@@ -6,7 +6,6 @@ import {
   TrendingDown,
   DollarSign, 
   Coins, 
-  HelpCircle, 
   Calculator, 
   RotateCcw,
   Info,
@@ -37,6 +36,19 @@ import { formatMilhar, parseMilhar, formatBRL } from '../utils/format';
 import { useEconomicRates } from '../hooks/useEconomicRates';
 import { useExchangeRates } from '../hooks/useExchangeRates';
 import { calculateToolResult } from '../utils/calculations/toolCalculations';
+import ToolQuickGuide from '../components/calculator/ToolQuickGuide';
+import PersonalizeTrigger from '../components/calculator/PersonalizeTrigger';
+import CalculatorAdvancedFields from '../components/calculator/CalculatorAdvancedFields';
+import MethodologyPanel from '../components/calculator/MethodologyPanel';
+import FieldHint from '../components/calculator/FieldHint';
+import { useCalculatorMode } from '../hooks/useCalculatorMode';
+import { TOOL_GUIDES } from '../config/toolGuides';
+import { calcularPeriodoRescisao } from '../utils/rescisaoDates';
+import {
+  DEFAULT_ADVANCED_OPTIONS,
+  type AdvancedCalculatorOptions,
+} from '../types/calculator';
+import type { RescisaoMotivo } from '../utils/calculations/toolCalculations';
 
 const EvolucaoChart = lazy(() => import('../components/EvolucaoChart'));
 const TabelaMensal = lazy(() => import('../components/TabelaMensal'));
@@ -110,11 +122,11 @@ export default function CalculatorPage({
   const { slug } = useParams<{ slug?: string }>();
 
   // --- Estados da Calculadora (com máscaras brasileiras) ---
-  const [valorInicialStr, setValorInicialStr] = useState<string>('0');
-  const [aporteMensalStr, setAporteMensalStr] = useState<string>('0');
-  const [tempo, setTempo] = useState<number>(0);
+  const [valorInicialStr, setValorInicialStr] = useState<string>('1.000');
+  const [aporteMensalStr, setAporteMensalStr] = useState<string>('500');
+  const [tempo, setTempo] = useState<number>(20);
   const [tempoUnidade, setTempoUnidade] = useState<TempoUnidade>('anos');
-  const [taxaAnual, setTaxaAnual] = useState<number>(0);
+  const [taxaAnual, setTaxaAnual] = useState<number>(10);
   const [taxaTipo, setTaxaTipo] = useState<TaxaTipo>('manual');
   const [taxaPeriodo, setTaxaPeriodo] = useState<'anual' | 'mensal'>('anual');
 
@@ -137,9 +149,40 @@ export default function CalculatorPage({
 
   // --- Estados do Cálculo de Rescisão ---
   const [rescisaoSalarioStr, setRescisaoSalarioStr] = useState<string>('5.000');
-  const [rescisaoMesesTrabalhados, setRescisaoMesesTrabalhados] = useState<number>(12);
-  const [rescisaoMotivo, setRescisaoMotivo] = useState<'sem_justa' | 'com_justa' | 'pedido_demissao' | 'acordo'>('sem_justa');
-  const [rescisaoDiasTrabalhados, setRescisaoDiasTrabalhados] = useState<number>(30);
+  const [rescisaoDataAdmissao, setRescisaoDataAdmissao] = useState<string>('2022-01-10');
+  const [rescisaoDataDesligamento, setRescisaoDataDesligamento] = useState<string>('2024-06-15');
+  const [rescisaoMotivo, setRescisaoMotivo] = useState<RescisaoMotivo>('sem_justa');
+
+  const { setMode: setCalculatorMode, isAdvanced } = useCalculatorMode(activeTool);
+  const [advancedOptions, setAdvancedOptions] = useState<AdvancedCalculatorOptions>(DEFAULT_ADVANCED_OPTIONS);
+
+  const patchAdvancedOptions = useCallback((patch: Partial<AdvancedCalculatorOptions>) => {
+    setAdvancedOptions((prev) => ({
+      juros: { ...prev.juros, ...patch.juros },
+      cltPj: { ...prev.cltPj, ...patch.cltPj },
+      aposentadoria: { ...prev.aposentadoria, ...patch.aposentadoria },
+      rescisao: { ...prev.rescisao, ...patch.rescisao },
+    }));
+  }, []);
+
+  const rescisaoPeriodoDerivado = useMemo(
+    () => calcularPeriodoRescisao(rescisaoDataAdmissao, rescisaoDataDesligamento),
+    [rescisaoDataAdmissao, rescisaoDataDesligamento],
+  );
+
+  const rescisaoMesesEfetivos = useMemo(() => {
+    if (isAdvanced && advancedOptions.rescisao.usarPeriodoManual) {
+      return advancedOptions.rescisao.mesesManual;
+    }
+    return rescisaoPeriodoDerivado.mesesTrabalhados;
+  }, [isAdvanced, advancedOptions.rescisao, rescisaoPeriodoDerivado.mesesTrabalhados]);
+
+  const rescisaoDiasEfetivos = useMemo(() => {
+    if (isAdvanced && advancedOptions.rescisao.usarPeriodoManual) {
+      return advancedOptions.rescisao.diasManual;
+    }
+    return rescisaoPeriodoDerivado.diasUltimoMes;
+  }, [isAdvanced, advancedOptions.rescisao, rescisaoPeriodoDerivado.diasUltimoMes]);
 
   const goldRate = cotasBRL.XAU ?? 12900;
 
@@ -212,10 +255,13 @@ export default function CalculatorPage({
         aposentadoriaIdadeAlvo,
         aposentadoriaRendaDesejadaNum,
         aposentadoriaPatrimonioAtualNum,
+        aposentadoriaSalarioAtualNum,
         rescisaoSalarioNum,
-        rescisaoMesesTrabalhados,
+        rescisaoMesesTrabalhados: rescisaoMesesEfetivos,
         rescisaoMotivo,
-        rescisaoDiasTrabalhados,
+        rescisaoDiasTrabalhados: rescisaoDiasEfetivos,
+        advancedMode: isAdvanced,
+        advanced: advancedOptions,
       }),
     [
       activeTool,
@@ -235,10 +281,13 @@ export default function CalculatorPage({
       aposentadoriaIdadeAlvo,
       aposentadoriaRendaDesejadaNum,
       aposentadoriaPatrimonioAtualNum,
+      aposentadoriaSalarioAtualNum,
       rescisaoSalarioNum,
-      rescisaoMesesTrabalhados,
+      rescisaoMesesEfetivos,
       rescisaoMotivo,
-      rescisaoDiasTrabalhados,
+      rescisaoDiasEfetivos,
+      isAdvanced,
+      advancedOptions,
     ],
   );
 
@@ -263,6 +312,48 @@ export default function CalculatorPage({
 
   const aposentadoriaData = activeTool === 'aposentadoria' ? (calculoResultado as any) : null;
   const rescisaoData = activeTool === 'rescisao' ? (calculoResultado as any) : null;
+
+  const methodologyLiveParams = useMemo(() => {
+    if (activeTool === 'juros') {
+      return [
+        { label: 'Taxa', value: `${taxaAnual.toFixed(2)}% ${taxaPeriodo === 'anual' ? 'a.a.' : 'a.m.'}` },
+        { label: 'Selic ref.', value: `${selicRate.toFixed(2)}% a.a.` },
+        { label: 'IPCA ref.', value: `${ipcaRate.toFixed(2)}% a.a.` },
+      ];
+    }
+    if (activeTool === 'clt-pj') {
+      return [
+        { label: 'Salário CLT', value: formatBRL(salarioCltNum) },
+        { label: 'Regime PJ', value: isAdvanced ? advancedOptions.cltPj.regimePj : 'Simples 6%' },
+      ];
+    }
+    if (activeTool === 'aposentadoria') {
+      return [
+        { label: 'Renda alvo', value: formatBRL(aposentadoriaRendaDesejadaNum) },
+        { label: 'Horizonte', value: `${Math.max(1, aposentadoriaIdadeAlvo - aposentadoriaIdadeAtual)} anos` },
+      ];
+    }
+    return [
+      { label: 'Salário base', value: formatBRL(rescisaoSalarioNum) },
+      { label: 'Período', value: `${rescisaoMesesEfetivos} meses` },
+      { label: 'Motivo', value: rescisaoMotivo.replace(/_/g, ' ') },
+    ];
+  }, [
+    activeTool,
+    taxaAnual,
+    taxaPeriodo,
+    selicRate,
+    ipcaRate,
+    salarioCltNum,
+    isAdvanced,
+    advancedOptions.cltPj.regimePj,
+    aposentadoriaRendaDesejadaNum,
+    aposentadoriaIdadeAlvo,
+    aposentadoriaIdadeAtual,
+    rescisaoSalarioNum,
+    rescisaoMesesEfetivos,
+    rescisaoMotivo,
+  ]);
 
   // --- Manipuladores de Mudança do Seletor de Juros ---
   const handleTaxaTipoChange = (tipo: TaxaTipo) => {
@@ -313,11 +404,11 @@ export default function CalculatorPage({
 
   // --- Resetar Campos ---
   const handleReset = () => {
-    setValorInicialStr('0');
-    setAporteMensalStr('0');
-    setTempo(0);
+    setValorInicialStr('1.000');
+    setAporteMensalStr('500');
+    setTempo(20);
     setTempoUnidade('anos');
-    setTaxaAnual(0);
+    setTaxaAnual(10);
     setTaxaTipo('manual');
     setTaxaPeriodo('anual');
   };
@@ -504,7 +595,8 @@ export default function CalculatorPage({
           </header>
 
           <div className="px-3 pb-5 md:px-5 md:pb-7 lg:px-7 lg:pb-8 pt-4 md:pt-5">
-            <div className={`rounded-xl ${ACTIVE_TOOL_SURFACE} border border-slate-200/60 p-4 md:p-6 lg:p-8`}>
+            <ToolQuickGuide guide={TOOL_GUIDES[activeTool]} />
+            <div className={`rounded-xl ${ACTIVE_TOOL_SURFACE} border border-slate-200/60 p-4 md:p-6 lg:p-8 mt-4`}>
               <p className="sr-only">
                 Área de trabalho da calculadora {activeToolMeta.title}. Inclui campos de entrada, resultados, gráficos e tabelas.
               </p>
@@ -518,7 +610,7 @@ export default function CalculatorPage({
           {/* LADO ESQUERDO (Width: 1/4) */}
           
           {/* CARD 1: FORMULÁRIO SELECIONADO DA FERRAMENTA ATIVA */}
-          <div className="order-1 lg:col-span-1 lg:col-start-1 lg:row-start-1 h-fit bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col gap-5 relative overflow-hidden">
+          <div className="order-2 lg:order-1 lg:col-span-1 lg:col-start-1 lg:row-start-1 h-fit bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col gap-5 relative overflow-hidden">
               
               {/* Decoration Line Top */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-[#800020]"></div>
@@ -528,7 +620,7 @@ export default function CalculatorPage({
                   <div className="flex items-center justify-between border-b border-slate-50 pb-3">
                     <h2 className="font-bold text-slate-900 text-md flex items-center gap-2">
                       <Calculator className="w-5 h-5 text-[#800020]" />
-                      Simulador Juros
+                      Simule seu investimento
                     </h2>
                     <button 
                       type="button" 
@@ -543,9 +635,9 @@ export default function CalculatorPage({
 
                   {/* Campo: Valor Inicial */}
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="valor-inicial" className="text-xs font-semibold text-slate-700 flex justify-between">
-                      <span>Valor Inicial (R$)</span>
-                      <span className="font-mono text-slate-500 text-[11px]">Aporte único</span>
+                    <label htmlFor="valor-inicial" className="text-xs font-semibold text-slate-700 flex items-center">
+                      Quanto você já tem (R$)
+                      <FieldHint text="Valor que você já possui guardado hoje, antes dos aportes mensais." />
                     </label>
                     <div className="relative">
                       <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold" aria-hidden="true">R$</span>
@@ -554,32 +646,30 @@ export default function CalculatorPage({
                         type="text"
                         inputMode="numeric"
                         value={valorInicialStr}
-                        onChange={(e) => {
-                          const masked = formatMilhar(e.target.value);
-                          setValorInicialStr(masked);
-                        }}
-                        className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
-                        placeholder="0"
+                        onChange={(e) => setValorInicialStr(formatMilhar(e.target.value))}
+                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                        placeholder="1.000"
                       />
                     </div>
-                    <input
-                      id="valor-inicial-range"
-                      type="range"
-                      min="0"
-                      max="500000"
-                      step="5000"
-                      value={valorInicialNum}
-                      onChange={(e) => setValorInicialStr(formatMilhar(e.target.value))}
-                      aria-label="Ajustar valor inicial"
-                      className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#800020] mt-1"
-                    />
+                    {isAdvanced && (
+                      <input
+                        id="valor-inicial-range"
+                        type="range"
+                        min="0"
+                        max="500000"
+                        step="5000"
+                        value={valorInicialNum}
+                        onChange={(e) => setValorInicialStr(formatMilhar(e.target.value))}
+                        aria-label="Ajustar valor inicial"
+                        className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#800020] mt-1"
+                      />
+                    )}
                   </div>
 
-                  {/* Campo: Aporte Mensal */}
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="aporte-mensal" className="text-xs font-semibold text-slate-700 flex justify-between">
-                      <span>Aporte Mensal (R$)</span>
-                      <span className="font-mono text-slate-500 text-[11px]">Todo mês</span>
+                    <label htmlFor="aporte-mensal" className="text-xs font-semibold text-slate-700 flex items-center">
+                      Quanto guardar por mês (R$)
+                      <FieldHint text="Valor que você pretende investir todo mês." />
                     </label>
                     <div className="relative">
                       <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold" aria-hidden="true">R$</span>
@@ -588,47 +678,48 @@ export default function CalculatorPage({
                         type="text"
                         inputMode="numeric"
                         value={aporteMensalStr}
-                        onChange={(e) => {
-                          const masked = formatMilhar(e.target.value);
-                          setAporteMensalStr(masked);
-                        }}
-                        className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
-                        placeholder="0"
+                        onChange={(e) => setAporteMensalStr(formatMilhar(e.target.value))}
+                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                        placeholder="500"
                       />
                     </div>
-                    <input
-                      id="aporte-mensal-range"
-                      type="range"
-                      min="0"
-                      max="20000"
-                      step="100"
-                      value={aporteMensalNum}
-                      onChange={(e) => setAporteMensalStr(formatMilhar(e.target.value))}
-                      aria-label="Ajustar aporte mensal"
-                      className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#800020] mt-1"
-                    />
+                    {isAdvanced && (
+                      <input
+                        id="aporte-mensal-range"
+                        type="range"
+                        min="0"
+                        max="20000"
+                        step="100"
+                        value={aporteMensalNum}
+                        onChange={(e) => setAporteMensalStr(formatMilhar(e.target.value))}
+                        aria-label="Ajustar aporte mensal"
+                        className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#800020] mt-1"
+                      />
+                    )}
                   </div>
 
-                  {/* Campo: Tempo (Anos/Meses) */}
                   <div className="grid grid-cols-5 gap-2">
                     <div className="col-span-3 flex flex-col gap-1.5">
-                      <label htmlFor="tempo-periodo" className="text-xs font-semibold text-slate-700">Período</label>
+                      <label htmlFor="tempo-periodo" className="text-xs font-semibold text-slate-700 flex items-center">
+                        Por quanto tempo
+                        <FieldHint text="Por quantos anos ou meses você vai guardar dinheiro." />
+                      </label>
                       <input
                         id="tempo-periodo"
                         type="number"
                         value={tempo || ''}
                         onChange={(e) => setTempo(Math.min(600, Math.max(0, parseInt(e.target.value) || 0)))}
-                        className="w-full px-3.5 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
-                        placeholder="10"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                        placeholder="20"
                       />
                     </div>
                     <div className="col-span-2 flex flex-col gap-1.5">
-                      <label htmlFor="tempo-unidade" className="text-xs font-semibold text-slate-700">Unidade</label>
+                      <label htmlFor="tempo-unidade" className="text-xs font-semibold text-slate-700">Em</label>
                       <select
                         id="tempo-unidade"
                         value={tempoUnidade}
                         onChange={(e) => setTempoUnidade(e.target.value as TempoUnidade)}
-                        className="w-full py-2 px-1 bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl focus:outline-hidden focus:border-[#800020] cursor-pointer"
+                        className="w-full py-2.5 px-1 bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl focus:outline-hidden focus:border-[#800020] cursor-pointer min-h-[2.75rem]"
                       >
                         <option value="anos">Anos</option>
                         <option value="meses">Meses</option>
@@ -636,127 +727,23 @@ export default function CalculatorPage({
                     </div>
                   </div>
 
-                  {/* Seletor do Período da Taxa (Mensal vs Anual) */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700 flex justify-between">
-                      <span>Capitalização da Taxa</span>
-                      <span className="text-[10px] text-slate-500 font-mono">Regra de Cálculo</span>
+                    <label htmlFor="taxa-rendimento" className="text-xs font-semibold text-slate-700 flex items-center">
+                      Ganho anual esperado (%)
+                      <FieldHint text="Quanto você espera que o investimento renda por ano, em média." />
                     </label>
-                    <div className="grid grid-cols-2 gap-1 bg-slate-100/70 p-1 rounded-xl">
-                      <button
-                        type="button"
-                        onClick={() => handleTaxaPeriodoChange('anual')}
-                        className={`text-[10px] py-1 font-bold rounded-lg transition-all cursor-pointer text-center ${
-                          taxaPeriodo === 'anual'
-                            ? 'bg-white text-[#800020] shadow-xs'
-                            : 'text-slate-600 hover:text-slate-800'
-                        }`}
-                      >
-                        Ao Ano (% a.a.)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleTaxaPeriodoChange('mensal')}
-                        className={`text-[10px] py-1 font-bold rounded-lg transition-all cursor-pointer text-center ${
-                          taxaPeriodo === 'mensal'
-                            ? 'bg-white text-[#800020] shadow-xs'
-                            : 'text-slate-600 hover:text-slate-800'
-                        }`}
-                      >
-                        Ao Mês (% a.m.)
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Seletor Rápido de Taxa de Juros (Live Rates) */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700 flex justify-between">
-                      <span>Taxa de Juros ({taxaPeriodo === 'anual' ? 'Anual' : 'Mensal'})</span>
-                      <span className="text-[10px] text-slate-500 font-mono">Taxas 2026</span>
-                    </label>
-                    
-                    <div className="grid grid-cols-2 gap-1.5 mb-2">
-                      <button
-                        type="button"
-                        onClick={() => handleTaxaTipoChange('manual')}
-                        className={`text-[10px] font-bold py-2 px-1 rounded-lg border transition-all cursor-pointer ${
-                          taxaTipo === 'manual'
-                            ? 'border-[#800020] bg-rose-50 text-[#800020]'
-                            : 'border-slate-200 text-slate-500 hover:bg-slate-50'
-                        }`}
-                      >
-                        Manual
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleTaxaTipoChange('poupanca')}
-                        className={`text-[9px] sm:text-[10px] font-bold py-2 px-0.5 rounded-lg border transition-all cursor-pointer leading-tight ${
-                          taxaTipo === 'poupanca'
-                            ? 'border-[#800020] bg-rose-50 text-[#800020]'
-                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                        }`}
-                        title={`Poupança: ${taxaPeriodo === 'anual' ? calcularTaxaPoupancaVal(selicRate).toFixed(2) + '% a.a.' : convertAnualParaMensal(calcularTaxaPoupancaVal(selicRate)).toFixed(2) + '% a.m.'}`}
-                      >
-                        Poupança ({taxaPeriodo === 'anual' ? calcularTaxaPoupancaVal(selicRate).toFixed(2) : convertAnualParaMensal(calcularTaxaPoupancaVal(selicRate)).toFixed(2)}%)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleTaxaTipoChange('selic')}
-                        className={`text-[9px] sm:text-[10px] font-bold py-2 px-0.5 rounded-lg border transition-all cursor-pointer leading-tight ${
-                          taxaTipo === 'selic'
-                            ? 'border-[#800020] bg-rose-50 text-[#800020]'
-                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                        }`}
-                        title={`Selic: ${taxaPeriodo === 'anual' ? selicRate.toFixed(2) + '% a.a.' : convertAnualParaMensal(selicRate).toFixed(2) + '% a.m.'}`}
-                      >
-                        Selic ({taxaPeriodo === 'anual' ? selicRate.toFixed(2) : convertAnualParaMensal(selicRate).toFixed(2)}%)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleTaxaTipoChange('cdi')}
-                        className={`text-[9px] sm:text-[10px] font-bold py-2 px-0.5 rounded-lg border transition-all cursor-pointer leading-tight ${
-                          taxaTipo === 'cdi'
-                            ? 'border-[#800020] bg-rose-50 text-[#800020]'
-                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                        }`}
-                        title={`CDI: ${taxaPeriodo === 'anual' ? (selicRate - 0.10).toFixed(2) + '% a.a.' : convertAnualParaMensal(selicRate - 0.10).toFixed(2) + '% a.m.'}`}
-                      >
-                        CDI ({taxaPeriodo === 'anual' ? (selicRate - 0.10).toFixed(2) : convertAnualParaMensal(selicRate - 0.10).toFixed(2)}%)
-                      </button>
-                    </div>
-
                     <div className="relative">
-                      <span className="absolute right-3.5 top-2 ml-1 text-xs text-slate-500 font-bold">
-                        {taxaPeriodo === 'anual' ? '% a.a.' : '% a.m.'}
-                      </span>
+                      <span className="absolute right-3.5 top-2.5 text-xs text-slate-500 font-bold">% ao ano</span>
                       <input
+                        id="taxa-rendimento"
                         type="number"
                         step="0.01"
+                        min="0"
                         value={taxaAnual || ''}
-                        disabled={taxaTipo !== 'manual'}
                         onChange={(e) => handleTaxaAnualChange(Math.max(0, parseFloat(e.target.value) || 0))}
-                        className={`w-full pl-4 pr-14 py-2 text-sm font-semibold rounded-xl focus:outline-hidden transition-all ${
-                          taxaTipo !== 'manual'
-                            ? 'bg-slate-100 text-slate-500 border border-slate-250 cursor-not-allowed'
-                            : 'bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900'
-                        }`}
-                        placeholder="12.00"
+                        className="w-full pl-4 pr-20 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                        placeholder="10"
                       />
-                    </div>
-                  </div>
-
-                  {/* Informação Resumo da Taxa Composta */}
-                  <div className="bg-slate-50/75 border border-slate-100 rounded-xl p-3 flex gap-2 items-start text-[11px]">
-                    <Info className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
-                    <div className="text-slate-500 font-sans leading-tight">
-                      A taxa {taxaPeriodo === 'anual' ? 'anual' : 'mensal'} de <span className="font-semibold text-slate-700">{taxaAnual.toFixed(2)}%</span> equivale a{' '}
-                      <span className="font-semibold text-slate-800">
-                        {taxaPeriodo === 'anual'
-                          ? `${convertAnualParaMensal(taxaAnual).toFixed(4)}% ao mês`
-                          : `${convertMensalParaAnual(taxaAnual).toFixed(4)}% ao ano`
-                        }
-                      </span>{' '}
-                      segundo o cálculo composto padrão.
                     </div>
                   </div>
                 </>
@@ -850,7 +837,7 @@ export default function CalculatorPage({
 
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="aposentadoria-idade-atual" className="flex justify-between text-xs font-semibold text-slate-700">
-                      <span>Idade Atual</span>
+                      <span className="flex items-center">Sua idade hoje</span>
                       <span className="text-[#800020] font-bold">{aposentadoriaIdadeAtual} anos</span>
                     </label>
                     <input
@@ -868,7 +855,10 @@ export default function CalculatorPage({
                   {/* Idade Alvo */}
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="aposentadoria-idade-alvo" className="flex justify-between text-xs font-semibold text-slate-700">
-                      <span>Idade Alvo</span>
+                      <span className="flex items-center">
+                        Idade para aposentar
+                        <FieldHint text="Com quantos anos você quer parar de trabalhar." />
+                      </span>
                       <span className="text-[#800020] font-bold">{aposentadoriaIdadeAlvo} anos</span>
                     </label>
                     <input
@@ -885,7 +875,10 @@ export default function CalculatorPage({
 
                   {/* Renda Desejada */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700">Renda Desejada (R$/mês)</label>
+                    <label className="text-xs font-semibold text-slate-700 flex items-center">
+                      Renda mensal desejada (R$)
+                      <FieldHint text="Quanto você quer receber por mês na aposentadoria." />
+                    </label>
                     <div className="relative">
                       <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
                       <input
@@ -895,22 +888,6 @@ export default function CalculatorPage({
                         onChange={(e) => setAposentadoriaRendaDesejadaStr(formatMilhar(e.target.value))}
                         className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
                         placeholder="10.000"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Patrimônio Atual */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700">Patrimônio Atual (R$)</label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={aposentadoriaPatrimonioAtualStr}
-                        onChange={(e) => setAposentadoriaPatrimonioAtualStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
-                        placeholder="50.000"
                       />
                     </div>
                   </div>
@@ -926,9 +903,12 @@ export default function CalculatorPage({
                     </h2>
                   </div>
 
-                  {/* Salário Base */}
+                  {/* Salário */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700">Salário Bruto (R$)</label>
+                    <label className="text-xs font-semibold text-slate-700 flex items-center">
+                      Salário bruto (R$)
+                      <FieldHint text="Seu salário bruto mensal na carteira assinada." />
+                    </label>
                     <div className="relative">
                       <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
                       <input
@@ -936,63 +916,109 @@ export default function CalculatorPage({
                         inputMode="numeric"
                         value={rescisaoSalarioStr}
                         onChange={(e) => setRescisaoSalarioStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
+                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                         placeholder="5.000"
                       />
                     </div>
                   </div>
 
-                  {/* Meses Trabalhados */}
                   <div className="flex flex-col gap-1.5">
-                    <div className="flex justify-between text-xs font-semibold text-slate-700">
-                      <span>Meses Trabalhados</span>
-                      <span className="text-[#800020] font-bold">{rescisaoMesesTrabalhados} m</span>
-                    </div>
+                    <label htmlFor="rescisao-admissao" className="text-xs font-semibold text-slate-700 flex items-center">
+                      Data de admissão
+                      <FieldHint text="Quando você começou a trabalhar nesta empresa." />
+                    </label>
                     <input
-                      type="range"
-                      min="1"
-                      max="240"
-                      value={rescisaoMesesTrabalhados}
-                      onChange={(e) => setRescisaoMesesTrabalhados(parseInt(e.target.value))}
-                      className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#800020]"
+                      id="rescisao-admissao"
+                      type="date"
+                      value={rescisaoDataAdmissao}
+                      onChange={(e) => setRescisaoDataAdmissao(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                     />
                   </div>
 
-                  {/* Dias no Último Mês */}
                   <div className="flex flex-col gap-1.5">
-                    <div className="flex justify-between text-xs font-semibold text-slate-700">
-                      <span>Último Mês (Dias)</span>
-                      <span className="text-[#800020] font-bold">{rescisaoDiasTrabalhados} dias</span>
-                    </div>
+                    <label htmlFor="rescisao-desligamento" className="text-xs font-semibold text-slate-700 flex items-center">
+                      Data de desligamento
+                      <FieldHint text="Último dia trabalhado ou data da rescisão." />
+                    </label>
                     <input
-                      type="range"
-                      min="1"
-                      max="30"
-                      value={rescisaoDiasTrabalhados}
-                      onChange={(e) => setRescisaoDiasTrabalhados(parseInt(e.target.value))}
-                      className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#800020]"
+                      id="rescisao-desligamento"
+                      type="date"
+                      value={rescisaoDataDesligamento}
+                      onChange={(e) => setRescisaoDataDesligamento(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                     />
                   </div>
+
+                  {!isAdvanced && (
+                    <p className="text-[10px] text-slate-500 bg-slate-50 rounded-lg px-2.5 py-2">
+                      Tempo calculado: {rescisaoMesesEfetivos} meses · {rescisaoDiasEfetivos} dias no último mês
+                    </p>
+                  )}
 
                   {/* Motivo do Desligamento */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700">Motivo</label>
+                    <label className="text-xs font-semibold text-slate-700 flex items-center">
+                      Tipo de rescisão
+                      <FieldHint text="O motivo do desligamento muda o valor do FGTS e das multas." />
+                    </label>
                     <select
                       value={rescisaoMotivo}
-                      onChange={(e) => setRescisaoMotivo(e.target.value as 'sem_justa' | 'pedido_demissao')}
+                      onChange={(e) => setRescisaoMotivo(e.target.value as RescisaoMotivo)}
                       className="w-full py-2 px-3 bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold rounded-xl focus:outline-hidden focus:border-[#800020] cursor-pointer"
                     >
-                      <option value="sem_justa">Sem justa causa (Empresa)</option>
+                      <option value="sem_justa">Sem justa causa (empresa)</option>
                       <option value="pedido_demissao">Pedido de demissão</option>
+                      <option value="com_justa">Com justa causa</option>
+                      <option value="acordo">Acordo trabalhista</option>
                     </select>
                   </div>
                 </>
               )}
 
+              <PersonalizeTrigger
+                isAdvanced={isAdvanced}
+                onOpen={() => setCalculatorMode('advanced')}
+                onClose={() => setCalculatorMode('simple')}
+              />
+
+              {isAdvanced && (
+                <CalculatorAdvancedFields
+                  activeTool={activeTool}
+                  advanced={advancedOptions}
+                  onChange={patchAdvancedOptions}
+                  aposentadoriaSalarioAtualNum={aposentadoriaSalarioAtualNum}
+                  defaultOpen
+                  jurosUi={
+                    activeTool === 'juros'
+                      ? {
+                          taxaPeriodo,
+                          taxaTipo,
+                          taxaAnual,
+                          selicRate,
+                          onTaxaPeriodoChange: handleTaxaPeriodoChange,
+                          onTaxaTipoChange: handleTaxaTipoChange,
+                          onTaxaAnualChange: handleTaxaAnualChange,
+                        }
+                      : undefined
+                  }
+                  aposentadoriaUi={
+                    activeTool === 'aposentadoria'
+                      ? {
+                          patrimonioStr: aposentadoriaPatrimonioAtualStr,
+                          salarioStr: aposentadoriaSalarioAtualStr,
+                          onPatrimonioChange: setAposentadoriaPatrimonioAtualStr,
+                          onSalarioChange: setAposentadoriaSalarioAtualStr,
+                        }
+                      : undefined
+                  }
+                />
+              )}
+
           </div>
 
           {/* LADO DIREITO (Width: 3/4) */}
-          <div className="order-2 lg:col-span-3 lg:col-start-2 lg:row-start-1 flex flex-col gap-8">
+          <div className="order-1 lg:order-2 lg:col-span-3 lg:col-start-2 lg:row-start-1 flex flex-col gap-8">
             
             {/* GRID DO TOPO: CARDS DE RESULTADOS DESTACADOS */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -1172,8 +1198,12 @@ export default function CalculatorPage({
                         Comparativo detalhado de direitos CLT contra faturamento operacional PJ
                       </p>
                     </div>
-                    <div className="px-3 py-1 bg-emerald-50 rounded-lg text-emerald-700 font-bold border border-emerald-100 text-xs font-mono">
-                      Cenário Recomendado: PJ
+                    <div className={`px-3 py-1 rounded-lg font-bold border text-xs font-mono ${
+                      cltPjExtra?.melhorCenario === 'PJ'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                        : 'bg-slate-100 text-slate-700 border-slate-200'
+                    }`}>
+                      Cenário Recomendado: {cltPjExtra?.melhorCenario ?? '—'}
                     </div>
                   </div>
 
@@ -1401,7 +1431,12 @@ export default function CalculatorPage({
                     <div className="text-right shrink-0">
                       <span className="text-[10px] text-slate-500 block font-mono">REGIME</span>
                       <span className="font-bold text-[10px] text-[#800020] uppercase bg-rose-50 px-2 py-0.5 rounded border border-rose-100 mt-1 inline-block font-sans">
-                        {rescisaoData.motivo === 'sem_justa' ? 'Sem Justa Causa (Empregador)' : 'Pedido de Demissão'}
+                        {{
+                          sem_justa: 'Sem Justa Causa (Empregador)',
+                          pedido_demissao: 'Pedido de Demissão',
+                          com_justa: 'Com Justa Causa',
+                          acordo: 'Acordo Trabalhista',
+                        }[rescisaoData.motivo as RescisaoMotivo] ?? rescisaoData.motivo}
                       </span>
                     </div>
                   </div>
@@ -1447,17 +1482,26 @@ export default function CalculatorPage({
                             <td className="py-3 text-right text-slate-500">{rescisaoData.mesesTrabalhadosVal} meses depositados</td>
                             <td className="py-3 text-right font-semibold font-mono text-slate-800">{formatBRL(rescisaoData.fgts.acumulado)}</td>
                           </tr>
-                          {rescisaoData.motivo === 'sem_justa' && (
+                          {(rescisaoData.motivo === 'sem_justa' || rescisaoData.motivo === 'acordo') && (
                             <tr>
-                              <td className="py-3 font-medium text-[#800020]">Multa Rescisória de FGTS (40%)</td>
+                              <td className="py-3 font-medium text-[#800020]">
+                                Multa Rescisória de FGTS ({rescisaoData.motivo === 'acordo' ? '20%' : '40%'})
+                              </td>
                               <td className="py-3 text-right text-rose-500">Liberado pelo motivo de demissão</td>
                               <td className="py-3 text-right font-extrabold font-mono text-emerald-700">+{formatBRL(rescisaoData.fgts.multa)}</td>
+                            </tr>
+                          )}
+                          {rescisaoData.avisoPrevioValor > 0 && (
+                            <tr>
+                              <td className="py-3 font-medium text-slate-800">Aviso Prévio Indenizado</td>
+                              <td className="py-3 text-right text-slate-500">Modo avançado</td>
+                              <td className="py-3 text-right font-semibold font-mono text-slate-800">{formatBRL(rescisaoData.avisoPrevioValor)}</td>
                             </tr>
                           )}
                           <tr className="bg-slate-50/75 select-none text-slate-700">
                             <td className="py-3 px-2 font-bold flex items-center gap-1.5">
                               FGTS Sacável Estimado Total 
-                              {rescisaoData.motivo !== 'sem_justa' && <span className="text-[9px] font-medium text-rose-500 font-sans">(Retido pelo motivo)</span>}
+                              {!rescisaoData.fgts.liberado && <span className="text-[9px] font-medium text-rose-500 font-sans">(Retido pelo motivo)</span>}
                             </td>
                             <td className="py-3 text-right"></td>
                             <td className="py-3 font-extrabold font-mono text-right">
@@ -1494,6 +1538,10 @@ export default function CalculatorPage({
             </div>
           </div>
         </div>
+        </div>
+
+        <div className="mt-8 px-3 md:px-5 lg:px-7">
+          <MethodologyPanel toolId={activeTool} liveParams={methodologyLiveParams} />
         </div>
 
         <Suspense fallback={null}>

@@ -32,6 +32,13 @@ import { formatConvertedValue, formatExchangeTimestamp, formatRateBRL } from '..
 import { conversorMoedasContent } from '../content/tools/conversor-moedas';
 import { ROUTES } from '../constants/routes';
 import { SITE_URL } from '../constants/site';
+import ToolQuickGuide from '../components/calculator/ToolQuickGuide';
+import PersonalizeTrigger from '../components/calculator/PersonalizeTrigger';
+import AdvancedSection from '../components/calculator/AdvancedSection';
+import MethodologyPanel from '../components/calculator/MethodologyPanel';
+import { useCalculatorMode } from '../hooks/useCalculatorMode';
+import { CONVERSOR_GUIDE } from '../config/toolGuides';
+import { QUOTE_TYPES, applyQuoteTypeToRates, type QuoteType } from '../constants/quoteTypes';
 
 const ToolSeoContent = lazy(() => import('../components/content/ToolSeoContent'));
 
@@ -72,16 +79,8 @@ export default function CurrencyConverterPage() {
   const [value, setValue] = useState(100);
   const [from, setFrom] = useState(DEFAULT_FROM);
   const [to, setTo] = useState(DEFAULT_TO);
-
-  const currencyOptions = useMemo(
-    () => [buildCurrencyInfo('BRL'), ...exchangeCurrencies],
-    [exchangeCurrencies],
-  );
-
-  const result = useMemo(
-    () => converterMatrizMoedas(value, from, to, rates),
-    [value, from, to, rates],
-  );
+  const [quoteType, setQuoteType] = useState<QuoteType>('comercial');
+  const { setMode: setCalculatorMode, isAdvanced } = useCalculatorMode('conversor');
 
   const chartCode = from === 'BRL' ? to : from;
   const chartRate = rates[chartCode] ?? 0;
@@ -96,6 +95,29 @@ export default function CurrencyConverterPage() {
     loadingHistory,
     hasHistory,
   } = useCurrencyHistory(chartCode, chartRate);
+
+  const asksMap = useMemo(() => {
+    const map: Record<string, number | null> = {};
+    for (const q of featured) {
+      if (q.ask != null) map[q.code] = q.ask;
+    }
+    return map;
+  }, [featured]);
+
+  const effectiveRates = useMemo(
+    () => (isAdvanced ? applyQuoteTypeToRates(rates, quoteType, asksMap) : rates),
+    [isAdvanced, rates, quoteType, asksMap],
+  );
+
+  const currencyOptions = useMemo(
+    () => [buildCurrencyInfo('BRL'), ...exchangeCurrencies],
+    [exchangeCurrencies],
+  );
+
+  const result = useMemo(
+    () => converterMatrizMoedas(value, from, to, effectiveRates),
+    [value, from, to, effectiveRates],
+  );
 
   const featuredMap = useMemo(() => {
     const map = new Map(featured.map((q) => [q.code, q]));
@@ -160,6 +182,7 @@ export default function CurrencyConverterPage() {
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900">{content.h1}</h1>
           <p className="text-sm text-slate-600 max-w-2xl leading-relaxed">{content.intro}</p>
+          <ToolQuickGuide guide={CONVERSOR_GUIDE} />
         </header>
 
         {/* Cotações do dia */}
@@ -231,7 +254,30 @@ export default function CurrencyConverterPage() {
           </header>
 
           <div className="p-4 md:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <CurrencyConverterPanel
+            <div className="flex flex-col gap-4 order-2 lg:order-1">
+              <PersonalizeTrigger
+                isAdvanced={isAdvanced}
+                onOpen={() => setCalculatorMode('advanced')}
+                onClose={() => setCalculatorMode('simple')}
+              />
+              {isAdvanced && (
+                <AdvancedSection defaultOpen id="personalizar-calculo">
+                  <label className="text-[11px] font-semibold text-slate-700">Tipo de cotação</label>
+                  <select
+                    value={quoteType}
+                    onChange={(e) => setQuoteType(e.target.value as QuoteType)}
+                    className="w-full px-3 py-2.5 bg-white border border-slate-200 text-slate-900 text-xs font-semibold rounded-xl focus:outline-hidden focus:border-amber-500 min-h-[2.75rem]"
+                  >
+                    {QUOTE_TYPES.map((qt) => (
+                      <option key={qt.id} value={qt.id}>
+                        {qt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-slate-500">{QUOTE_TYPES.find((q) => q.id === quoteType)?.hint}</p>
+                </AdvancedSection>
+              )}
+              <CurrencyConverterPanel
               value={value}
               onValueChange={setValue}
               from={from}
@@ -242,6 +288,7 @@ export default function CurrencyConverterPage() {
               result={result}
               currencies={currencyOptions}
             />
+            </div>
 
             <div className="flex flex-col gap-6">
               {/* Conversões rápidas */}
@@ -251,7 +298,7 @@ export default function CurrencyConverterPage() {
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
                   {QUICK_CONVERT_AMOUNTS.map((amount) => {
-                    const converted = converterMatrizMoedas(amount, from, to, rates);
+                    const converted = converterMatrizMoedas(amount, from, to, effectiveRates);
                     return (
                       <button
                         key={amount}
@@ -403,6 +450,14 @@ export default function CurrencyConverterPage() {
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </Link>
         </aside>
+
+        <MethodologyPanel
+          toolId="conversor"
+          liveParams={[
+            { label: 'Par de moedas', value: `${from} → ${to}` },
+            { label: 'Cotação', value: isAdvanced ? quoteType : 'comercial' },
+          ]}
+        />
 
         <Suspense fallback={null}>
           <ToolSeoContent content={content} />

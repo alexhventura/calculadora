@@ -53,6 +53,7 @@ describe('calculateToolResult', () => {
     aposentadoriaIdadeAlvo: 65,
     aposentadoriaRendaDesejadaNum: 10000,
     aposentadoriaPatrimonioAtualNum: 50000,
+    aposentadoriaSalarioAtualNum: 8000,
     rescisaoSalarioNum: 5000,
     rescisaoMesesTrabalhados: 12,
     rescisaoMotivo: 'sem_justa' as const,
@@ -66,10 +67,14 @@ describe('calculateToolResult', () => {
     expect(result.totais.valorBrutoUser).toBeGreaterThan(result.totais.totalInvestidoUser);
   });
 
-  it('calcula rescisão sem justa causa com FGTS liberado', () => {
-    const result = calculateToolResult({ ...baseInput, activeTool: 'rescisao' });
-    expect(result.tool).toBe('rescisao');
+  it('calcula rescisão em acordo com multa 20%', () => {
+    const result = calculateToolResult({
+      ...baseInput,
+      activeTool: 'rescisao',
+      rescisaoMotivo: 'acordo',
+      advancedMode: true,
+    });
     expect(result.fgts?.liberado).toBe(true);
-    expect(result.totalGeral).toBeGreaterThan(0);
+    expect(result.fgts?.multa).toBeCloseTo((result.fgts?.acumulado as number) * 0.2, 0);
   });
 });

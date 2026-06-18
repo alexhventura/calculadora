@@ -1,4 +1,42 @@
 import { RegistroMensal, ResultadosTotais, TempoUnidade, MoedaTipo } from '../types';
+import type { AporteFrequencia, JurosAdvancedOptions } from '../types/calculator';
+import { DEFAULT_JUROS_ADVANCED } from '../types/calculator';
+import { calcularIrCustom, calcularIrRegressivo } from './calculations/investmentTax';
+
+function aporteNoMes(aporteBase: number, freq: AporteFrequencia, mesIndex: number): number {
+  switch (freq) {
+    case 'quinzenal':
+      return aporteBase * 2;
+    case 'semanal':
+      return aporteBase * (52 / 12);
+    case 'anual':
+      return mesIndex > 0 && mesIndex % 12 === 0 ? aporteBase : 0;
+    default:
+      return aporteBase;
+  }
+}
+
+function taxaMensalFromInput(
+  taxaValor: number,
+  taxaPeriodo: 'anual' | 'mensal',
+  periodoExtendido?: JurosAdvancedOptions['taxaPeriodoExtendido'],
+): number {
+  const periodo = periodoExtendido ?? taxaPeriodo;
+  if (periodo === 'diaria') {
+    return Math.pow(1 + taxaValor / 100, 30) - 1;
+  }
+  if (periodo === 'mensal') {
+    return taxaValor / 100;
+  }
+  return Math.pow(1 + taxaValor / 100, 1 / 12) - 1;
+}
+
+function taxaLiquidaMensal(iMes: number, opts: JurosAdvancedOptions): number {
+  const custoAnual = opts.taxaAdminAnual + opts.taxaPerformanceAnual + opts.taxaCustodiaAnual;
+  if (custoAnual <= 0) return iMes;
+  const iCustoMes = Math.pow(1 + custoAnual / 100, 1 / 12) - 1;
+  return Math.max(0, iMes - iCustoMes);
+}
 
 // Taxas e cotações de referência estáveis para o cenário de 2026 (fallbacks)
 export const FALLBACK_SELIC = 14.50;  // % a.a
@@ -39,7 +77,8 @@ export function calcularJurosCompostos(
   taxaAnual: number,
   taxaPeriodo: 'anual' | 'mensal' = 'anual',
   taxaSelicRef: number = FALLBACK_SELIC,
-  taxaIpcaRef: number = FALLBACK_IPCA
+  taxaIpcaRef: number = FALLBACK_IPCA,
+  jurosAdvanced: JurosAdvancedOptions = DEFAULT_JUROS_ADVANCED,
 ): { registros: RegistroMensal[]; totais: ResultadosTotais } {
   // Garantir higienização contra NaN e valores negativos durante a digitação
   const valInicialClean = isNaN(valorInicial) || valorInicial < 0 ? 0 : valorInicial;
@@ -50,17 +89,13 @@ export function calcularJurosCompostos(
 
   const totalMeses = tempoUnidade === 'anos' ? Math.round(tempoClean * 12) : Math.round(tempoClean);
   
-  // Taxa do usuário (simulação manual ou outras) de acordo com o período da taxa
-  let iMesUser = 0;
-  let iAnoUser = 0;
-
-  if (taxaPeriodo === 'anual') {
-    iAnoUser = taxaAnualClean / 100;
-    iMesUser = Math.pow(1 + iAnoUser, 1 / 12) - 1;
-  } else {
-    iMesUser = taxaAnualClean / 100;
-    iAnoUser = Math.pow(1 + iMesUser, 12) - 1;
-  }
+  const iMesUserRaw = taxaMensalFromInput(
+    taxaAnualClean,
+    taxaPeriodo,
+    jurosAdvanced.taxaPeriodoExtendido,
+  );
+  const iMesUser = taxaLiquidaMensal(iMesUserRaw, jurosAdvanced);
+  const iAnoUser = Math.pow(1 + iMesUser, 12) - 1;
   
   // Taxa da Poupança baseada na Selic carregada
   const taxaPoupAnual = calcularTaxaPoupancaVal(taxaSelicRef);
@@ -76,9 +111,14 @@ export function calcularJurosCompostos(
   const iAnoCDI = taxaCdiRef / 100;
   const iMesCDI = Math.pow(1 + iAnoCDI, 1 / 12) - 1;
 
-  // Inflação Mensal IPCA para cálculo de poder de compra real
-  const iAnoIPCA = taxaIpcaRef / 100;
-  const iMesIPCA = Math.pow(1 + iAnoIPCA, 1 / 12) - 1;
+  const ipcaAnualRef =
+    jurosAdvanced.inflacaoModo === 'ipca_manual'
+      ? jurosAdvanced.inflacaoManual
+      : jurosAdvanced.inflacaoModo === 'none'
+        ? 0
+        : taxaIpcaRef;
+  const iAnoIPCA = ipcaAnualRef / 100;
+  const iMesIPCA = ipcaAnualRef > 0 ? Math.pow(1 + iAnoIPCA, 1 / 12) - 1 : 0;
 
   const registros: RegistroMensal[] = [];
   
@@ -121,25 +161,26 @@ export function calcularJurosCompostos(
   for (let m = 1; m <= totalMeses; m++) {
     // 1. Simulação Usuário
     const jurosMesUser = saldoUserVal * iMesUser;
-    saldoUserVal = saldoUserVal + jurosMesUser + aporteMensalClean;
+    const aporteMes = aporteNoMes(aporteMensalClean, jurosAdvanced.aporteFrequencia, m);
+    saldoUserVal = saldoUserVal + jurosMesUser + aporteMes;
     jurosAcumUserVal += jurosMesUser;
 
     // 2. Simulação Poupança
     const jurosMesPoupanca = saldoPoupancaVal * iMesPoupanca;
-    saldoPoupancaVal = saldoPoupancaVal + jurosMesPoupanca + aporteMensalClean;
+    saldoPoupancaVal = saldoPoupancaVal + jurosMesPoupanca + aporteMes;
     jurosAcumPoupancaVal += jurosMesPoupanca;
 
     // 3. Simulação Selic
     const jurosMesSelic = saldoSelicVal * iMesSelic;
-    saldoSelicVal = saldoSelicVal + jurosMesSelic + aporteMensalClean;
+    saldoSelicVal = saldoSelicVal + jurosMesSelic + aporteMes;
     jurosAcumSelicVal += jurosMesSelic;
 
     // 4. Simulação CDI
     const jurosMesCDI = saldoCDIVal * iMesCDI;
-    saldoCDIVal = saldoCDIVal + jurosMesCDI + aporteMensalClean;
+    saldoCDIVal = saldoCDIVal + jurosMesCDI + aporteMes;
     jurosAcumCDIVal += jurosMesCDI;
 
-    totalInvestidoAcumulado += aporteMensalClean;
+    totalInvestidoAcumulado += aporteMes;
 
     const anoAtual = Math.floor(m / 12);
     const mesResidual = m % 12;
@@ -176,16 +217,26 @@ export function calcularJurosCompostos(
     });
   }
 
-  // Desconto da Inflação Composta sobre o Montante Final
-  // A inflação acumulada no tempo é (1 + iMesIPCA)^totalMeses
-  const inflacaoAcumuladaDivisor = Math.pow(1 + iMesIPCA, totalMeses);
-  const poderCompraReal = totalMeses > 0 ? (saldoUserVal / inflacaoAcumuladaDivisor) : saldoUserVal;
-  const desvalorizacaoInflacao = Math.max(0, saldoUserVal - poderCompraReal);
+  let saldoUserFinal = saldoUserVal;
+  const ganhoLiquido = Math.max(0, saldoUserFinal - totalInvestidoAcumulado);
+  if (jurosAdvanced.tributacao === 'ir_regressivo' && ganhoLiquido > 0) {
+    saldoUserFinal -= calcularIrRegressivo(totalMeses * 30, ganhoLiquido);
+  } else if (jurosAdvanced.tributacao === 'ir_custom' && ganhoLiquido > 0) {
+    saldoUserFinal -= calcularIrCustom(ganhoLiquido, jurosAdvanced.irCustomPercent);
+  }
+
+  const inflacaoAcumuladaDivisor =
+    jurosAdvanced.inflacaoModo === 'none' || iMesIPCA <= 0
+      ? 1
+      : Math.pow(1 + iMesIPCA, totalMeses);
+  const poderCompraReal =
+    totalMeses > 0 ? saldoUserFinal / inflacaoAcumuladaDivisor : saldoUserFinal;
+  const desvalorizacaoInflacao = Math.max(0, saldoUserFinal - poderCompraReal);
 
   const totais: ResultadosTotais = {
-    valorBrutoUser: saldoUserVal,
+    valorBrutoUser: saldoUserFinal,
     totalInvestidoUser: totalInvestidoAcumulado,
-    totalJurosUser: jurosAcumUserVal,
+    totalJurosUser: Math.max(0, saldoUserFinal - totalInvestidoAcumulado),
     
     valorBrutoPoupanca: saldoPoupancaVal,
     totalJurosPoupanca: jurosAcumPoupancaVal,

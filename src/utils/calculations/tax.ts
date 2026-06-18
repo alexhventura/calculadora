@@ -1,6 +1,9 @@
+import { FISCAL_CONFIG } from '../../config/fiscal';
+
 /** INSS progressivo — tabelas vigentes 2026 (estimativa). */
 export function calcularInssProgressivo(base: number): number {
   const salario = Math.max(0, base);
+  const teto = FISCAL_CONFIG.inss.teto;
   if (salario <= 1412.0) return salario * 0.075;
   if (salario <= 2666.68) {
     return 1412.0 * 0.075 + (salario - 1412.0) * 0.09;
@@ -12,7 +15,7 @@ export function calcularInssProgressivo(base: number): number {
       (salario - 2666.68) * 0.12
     );
   }
-  const limiteTeto = Math.min(salario, 7786.02);
+  const limiteTeto = Math.min(salario, teto);
   return (
     1412.0 * 0.075 +
     (2666.68 - 1412.0) * 0.09 +
