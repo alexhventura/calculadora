@@ -70,6 +70,62 @@ export const FORM_DEFAULTS = {
   JurosFormDefaults | CltPjFormDefaults | AposentadoriaFormDefaults | RescisaoFormDefaults
 >;
 
-export function defaultAdvancedForTool(tool: ActiveTool): AdvancedCalculatorOptions {
+export function defaultAdvancedForTool(_tool: ActiveTool): AdvancedCalculatorOptions {
   return structuredClone(DEFAULT_ADVANCED_OPTIONS);
+}
+
+/** Valores vazios — usados ao clicar em "Limpar dados" (sem exemplos pré-preenchidos). */
+export const EMPTY_FORM_VALUES = {
+  juros: {
+    valorInicialStr: '',
+    aporteMensalStr: '',
+    tempo: 0,
+    tempoUnidade: 'anos' as TempoUnidade,
+    taxaAnual: 0,
+    taxaTipo: 'manual' as TaxaTipo,
+    taxaPeriodo: 'anual' as const,
+  },
+  'clt-pj': {
+    salarioCltStr: '',
+    cltVrStr: '',
+    cltSaudeStr: '',
+    cltOutrosStr: '',
+  },
+  aposentadoria: {
+    idadeAtual: 18,
+    idadeAlvo: 40,
+    salarioAtualStr: '',
+    rendaDesejadaStr: '',
+    patrimonioAtualStr: '',
+  },
+  rescisao: {
+    salarioStr: '',
+    dataAdmissao: '',
+    dataDesligamento: '',
+    motivo: 'sem_justa' as RescisaoMotivo,
+  },
+} satisfies Record<
+  ActiveTool,
+  JurosFormDefaults | CltPjFormDefaults | AposentadoriaFormDefaults | RescisaoFormDefaults
+>;
+
+export function emptyAdvancedForTool(_tool: ActiveTool): AdvancedCalculatorOptions {
+  const opts = structuredClone(DEFAULT_ADVANCED_OPTIONS);
+  opts.juros.inflacaoManual = 0;
+  opts.juros.irCustomPercent = 0;
+  opts.juros.taxaAdminAnual = 0;
+  opts.juros.taxaPerformanceAnual = 0;
+  opts.juros.taxaCustodiaAnual = 0;
+  opts.cltPj.contadorMensal = 0;
+  opts.cltPj.faturamentoPjManual = null;
+  opts.aposentadoria.salarioMedio = 0;
+  opts.aposentadoria.taxaRealPersonalizada = 0;
+  opts.aposentadoria.beneficioMensalManual = null;
+  opts.aposentadoria.aporteMensalAtual = 0;
+  opts.rescisao.manualSaldoSalario = null;
+  opts.rescisao.manualDecimoTerceiro = null;
+  opts.rescisao.manualFerias = null;
+  opts.rescisao.mesesManual = 0;
+  opts.rescisao.diasManual = 0;
+  return opts;
 }

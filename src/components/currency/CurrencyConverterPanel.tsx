@@ -43,7 +43,7 @@ export default function CurrencyConverterPanel({
             value={value || ''}
             onChange={(e) => onValueChange(Math.max(0, parseFloat(e.target.value) || 0))}
             className="w-full pl-14 pr-4 py-2.5 bg-white border border-slate-200 focus:border-amber-500 text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
-            placeholder="1000"
+            placeholder="0"
           />
         </div>
       </div>

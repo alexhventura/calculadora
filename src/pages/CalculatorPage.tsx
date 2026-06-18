@@ -46,7 +46,7 @@ import CalculatorActionBar from '../components/calculator/CalculatorActionBar';
 import { useCalculatorMode } from '../hooks/useCalculatorMode';
 import { TOOL_GUIDES } from '../config/toolGuides';
 import { HOW_TO_USE } from '../config/howToUse';
-import { FORM_DEFAULTS, defaultAdvancedForTool } from '../constants/defaultFormValues';
+import { EMPTY_FORM_VALUES, emptyAdvancedForTool } from '../constants/defaultFormValues';
 import { exportCalculationPdf } from '../utils/export/exportCalculationPdf';
 import { buildCalculatorPdfPayload } from '../utils/export/buildCalculatorPdf';
 import { calcularPeriodoRescisao } from '../utils/rescisaoDates';
@@ -413,87 +413,90 @@ export default function CalculatorPage({
   // --- Limpar todos os dados da ferramenta ativa ---
   const handleClearData = useCallback(() => {
     setCalculatorMode('simple');
-    setAdvancedOptions(defaultAdvancedForTool(activeTool));
+    setAdvancedOptions(emptyAdvancedForTool(activeTool));
 
     switch (activeTool) {
       case 'juros': {
-        setValorInicialStr(FORM_DEFAULTS.juros.valorInicialStr);
-        setAporteMensalStr(FORM_DEFAULTS.juros.aporteMensalStr);
-        setTempo(FORM_DEFAULTS.juros.tempo);
-        setTempoUnidade(FORM_DEFAULTS.juros.tempoUnidade);
-        setTaxaAnual(FORM_DEFAULTS.juros.taxaAnual);
-        setTaxaTipo(FORM_DEFAULTS.juros.taxaTipo);
-        setTaxaPeriodo(FORM_DEFAULTS.juros.taxaPeriodo);
+        setValorInicialStr(EMPTY_FORM_VALUES.juros.valorInicialStr);
+        setAporteMensalStr(EMPTY_FORM_VALUES.juros.aporteMensalStr);
+        setTempo(EMPTY_FORM_VALUES.juros.tempo);
+        setTempoUnidade(EMPTY_FORM_VALUES.juros.tempoUnidade);
+        setTaxaAnual(EMPTY_FORM_VALUES.juros.taxaAnual);
+        setTaxaTipo(EMPTY_FORM_VALUES.juros.taxaTipo);
+        setTaxaPeriodo(EMPTY_FORM_VALUES.juros.taxaPeriodo);
         break;
       }
       case 'clt-pj': {
-        setSalarioCltStr(FORM_DEFAULTS['clt-pj'].salarioCltStr);
-        setCltVrStr(FORM_DEFAULTS['clt-pj'].cltVrStr);
-        setCltSaudeStr(FORM_DEFAULTS['clt-pj'].cltSaudeStr);
-        setCltOutrosStr(FORM_DEFAULTS['clt-pj'].cltOutrosStr);
-        setFaturamentoPjStr('12.000');
+        setSalarioCltStr(EMPTY_FORM_VALUES['clt-pj'].salarioCltStr);
+        setCltVrStr(EMPTY_FORM_VALUES['clt-pj'].cltVrStr);
+        setCltSaudeStr(EMPTY_FORM_VALUES['clt-pj'].cltSaudeStr);
+        setCltOutrosStr(EMPTY_FORM_VALUES['clt-pj'].cltOutrosStr);
+        setFaturamentoPjStr('');
         break;
       }
       case 'aposentadoria': {
-        setAposentadoriaIdadeAtual(FORM_DEFAULTS.aposentadoria.idadeAtual);
-        setAposentadoriaIdadeAlvo(FORM_DEFAULTS.aposentadoria.idadeAlvo);
-        setAposentadoriaSalarioAtualStr(FORM_DEFAULTS.aposentadoria.salarioAtualStr);
-        setAposentadoriaRendaDesejadaStr(FORM_DEFAULTS.aposentadoria.rendaDesejadaStr);
-        setAposentadoriaPatrimonioAtualStr(FORM_DEFAULTS.aposentadoria.patrimonioAtualStr);
+        setAposentadoriaIdadeAtual(EMPTY_FORM_VALUES.aposentadoria.idadeAtual);
+        setAposentadoriaIdadeAlvo(EMPTY_FORM_VALUES.aposentadoria.idadeAlvo);
+        setAposentadoriaSalarioAtualStr(EMPTY_FORM_VALUES.aposentadoria.salarioAtualStr);
+        setAposentadoriaRendaDesejadaStr(EMPTY_FORM_VALUES.aposentadoria.rendaDesejadaStr);
+        setAposentadoriaPatrimonioAtualStr(EMPTY_FORM_VALUES.aposentadoria.patrimonioAtualStr);
         break;
       }
       case 'rescisao': {
-        setRescisaoSalarioStr(FORM_DEFAULTS.rescisao.salarioStr);
-        setRescisaoDataAdmissao(FORM_DEFAULTS.rescisao.dataAdmissao);
-        setRescisaoDataDesligamento(FORM_DEFAULTS.rescisao.dataDesligamento);
-        setRescisaoMotivo(FORM_DEFAULTS.rescisao.motivo);
+        setRescisaoSalarioStr(EMPTY_FORM_VALUES.rescisao.salarioStr);
+        setRescisaoDataAdmissao(EMPTY_FORM_VALUES.rescisao.dataAdmissao);
+        setRescisaoDataDesligamento(EMPTY_FORM_VALUES.rescisao.dataDesligamento);
+        setRescisaoMotivo(EMPTY_FORM_VALUES.rescisao.motivo);
         break;
       }
     }
   }, [activeTool, setCalculatorMode]);
 
   const handleSavePdf = useCallback(async () => {
-    const payload = buildCalculatorPdfPayload({
-      activeTool,
-      toolTitle: activeToolMeta.title,
-      isAdvanced,
-      valorInicialStr,
-      aporteMensalStr,
-      tempo,
-      tempoUnidade,
-      taxaAnual,
-      salarioCltStr,
-      cltVrStr,
-      cltSaudeStr,
-      cltOutrosStr,
-      aposIdadeAtual: aposentadoriaIdadeAtual,
-      aposIdadeAlvo: aposentadoriaIdadeAlvo,
-      aposRendaStr: aposentadoriaRendaDesejadaStr,
-      aposPatrimonioStr: aposentadoriaPatrimonioAtualStr,
-      rescisaoSalarioStr,
-      rescisaoDataAdmissao,
-      rescisaoDataDesligamento,
-      rescisaoMotivo,
-      painelCards: calculoResultado.painelTopCards.map((c) => ({
-        titulo: c.titulo,
-        valor: c.valor,
-        subtitulo: c.subtitulo,
-      })),
-      extraLines:
-        activeTool === 'aposentadoria' && aposentadoriaData
-          ? [
-              { label: 'Anos para acumular', value: `${aposentadoriaData.anosAcumulo} anos` },
-              { label: 'Patrimônio necessário', value: formatBRL(aposentadoriaData.patrimonioNecessario) },
-            ]
-          : activeTool === 'rescisao' && rescisaoData
-            ? [{ label: 'Total rescisão', value: formatBRL(rescisaoData.totalGeral ?? 0) }]
-            : undefined,
-    });
+    const payload = buildCalculatorPdfPayload(
+      {
+        activeTool,
+        toolTitle: activeToolMeta.title,
+        isAdvanced,
+        advanced: advancedOptions,
+        selicRate,
+        ipcaRate,
+        taxaPeriodo,
+        taxaTipo,
+        valorInicialStr,
+        aporteMensalStr,
+        tempo,
+        tempoUnidade,
+        taxaAnual,
+        salarioCltStr,
+        cltVrStr,
+        cltSaudeStr,
+        cltOutrosStr,
+        faturamentoPjStr,
+        aposIdadeAtual: aposentadoriaIdadeAtual,
+        aposIdadeAlvo: aposentadoriaIdadeAlvo,
+        aposRendaStr: aposentadoriaRendaDesejadaStr,
+        aposPatrimonioStr: aposentadoriaPatrimonioAtualStr,
+        aposSalarioStr: aposentadoriaSalarioAtualStr,
+        rescisaoSalarioStr,
+        rescisaoDataAdmissao,
+        rescisaoDataDesligamento,
+        rescisaoMotivo,
+        rescisaoMeses: rescisaoMesesEfetivos,
+        rescisaoDias: rescisaoDiasEfetivos,
+      },
+      calculoResultado,
+    );
     await exportCalculationPdf(payload);
   }, [
     activeTool,
     activeToolMeta.title,
     isAdvanced,
+    advancedOptions,
+    selicRate,
+    ipcaRate,
+    taxaPeriodo,
+    taxaTipo,
     valorInicialStr,
     aporteMensalStr,
     tempo,
@@ -503,17 +506,19 @@ export default function CalculatorPage({
     cltVrStr,
     cltSaudeStr,
     cltOutrosStr,
+    faturamentoPjStr,
     aposentadoriaIdadeAtual,
     aposentadoriaIdadeAlvo,
     aposentadoriaRendaDesejadaStr,
     aposentadoriaPatrimonioAtualStr,
+    aposentadoriaSalarioAtualStr,
     rescisaoSalarioStr,
     rescisaoDataAdmissao,
     rescisaoDataDesligamento,
     rescisaoMotivo,
-    calculoResultado.painelTopCards,
-    aposentadoriaData,
-    rescisaoData,
+    rescisaoMesesEfetivos,
+    rescisaoDiasEfetivos,
+    calculoResultado,
   ]);
 
   return (
@@ -698,7 +703,10 @@ export default function CalculatorPage({
           </header>
 
           <div className="px-3 pb-5 md:px-5 md:pb-7 lg:px-7 lg:pb-8 pt-4 md:pt-5">
+            <HowToUseButton variant="banner" onClick={() => setHowToUseOpen(true)} />
+            <div className="mt-4">
             <ToolQuickGuide guide={TOOL_GUIDES[activeTool]} />
+            </div>
             <div className={`rounded-xl ${ACTIVE_TOOL_SURFACE} border border-slate-200/60 p-4 md:p-6 lg:p-8 mt-4`}>
               <p className="sr-only">
                 Área de trabalho da calculadora {activeToolMeta.title}. Inclui campos de entrada, resultados, gráficos e tabelas.
@@ -717,8 +725,6 @@ export default function CalculatorPage({
               
               {/* Decoration Line Top */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-[#800020]"></div>
-
-              <HowToUseButton onClick={() => setHowToUseOpen(true)} />
 
               {activeTool === 'juros' && (
                 <>
@@ -744,7 +750,7 @@ export default function CalculatorPage({
                         value={valorInicialStr}
                         onChange={(e) => setValorInicialStr(formatMilhar(e.target.value))}
                         className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                        placeholder="1.000"
+                        placeholder="0,00"
                       />
                     </div>
                     {isAdvanced && (
@@ -776,7 +782,7 @@ export default function CalculatorPage({
                         value={aporteMensalStr}
                         onChange={(e) => setAporteMensalStr(formatMilhar(e.target.value))}
                         className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                        placeholder="500"
+                        placeholder="0,00"
                       />
                     </div>
                     {isAdvanced && (
@@ -806,7 +812,7 @@ export default function CalculatorPage({
                         value={tempo || ''}
                         onChange={(e) => setTempo(Math.min(600, Math.max(0, parseInt(e.target.value) || 0)))}
                         className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                        placeholder="20"
+                        placeholder="0"
                       />
                     </div>
                     <div className="col-span-2 flex flex-col gap-1.5">
@@ -838,7 +844,7 @@ export default function CalculatorPage({
                         value={taxaAnual || ''}
                         onChange={(e) => handleTaxaAnualChange(Math.max(0, parseFloat(e.target.value) || 0))}
                         className="w-full pl-4 pr-20 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                        placeholder="10"
+                        placeholder="0"
                       />
                     </div>
                   </div>
@@ -867,7 +873,7 @@ export default function CalculatorPage({
                         value={salarioCltStr}
                         onChange={(e) => setSalarioCltStr(formatMilhar(e.target.value))}
                         className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
-                        placeholder="8.000"
+                        placeholder="0,00"
                       />
                     </div>
                   </div>
@@ -883,7 +889,7 @@ export default function CalculatorPage({
                         value={cltVrStr}
                         onChange={(e) => setCltVrStr(formatMilhar(e.target.value))}
                         className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
-                        placeholder="1.000"
+                        placeholder="0,00"
                       />
                     </div>
                   </div>
@@ -899,7 +905,7 @@ export default function CalculatorPage({
                         value={cltSaudeStr}
                         onChange={(e) => setCltSaudeStr(formatMilhar(e.target.value))}
                         className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
-                        placeholder="650"
+                        placeholder="0,00"
                       />
                     </div>
                   </div>
@@ -915,7 +921,7 @@ export default function CalculatorPage({
                         value={cltOutrosStr}
                         onChange={(e) => setCltOutrosStr(formatMilhar(e.target.value))}
                         className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
-                        placeholder="400"
+                        placeholder="0,00"
                       />
                     </div>
                   </div>
@@ -983,7 +989,7 @@ export default function CalculatorPage({
                         value={aposentadoriaRendaDesejadaStr}
                         onChange={(e) => setAposentadoriaRendaDesejadaStr(formatMilhar(e.target.value))}
                         className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
-                        placeholder="10.000"
+                        placeholder="0,00"
                       />
                     </div>
                   </div>
@@ -1031,7 +1037,7 @@ export default function CalculatorPage({
                         value={rescisaoSalarioStr}
                         onChange={(e) => setRescisaoSalarioStr(formatMilhar(e.target.value))}
                         className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                        placeholder="5.000"
+                        placeholder="0,00"
                       />
                     </div>
                   </div>

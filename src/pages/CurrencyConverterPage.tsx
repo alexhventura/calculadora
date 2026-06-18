@@ -43,7 +43,7 @@ import { useCalculatorMode } from '../hooks/useCalculatorMode';
 import { CONVERSOR_GUIDE } from '../config/toolGuides';
 import { CONVERSOR_HOW_TO_USE } from '../config/howToUse';
 import { exportCalculationPdf } from '../utils/export/exportCalculationPdf';
-import { buildCalculatorPdfPayload } from '../utils/export/buildCalculatorPdf';
+import { buildConversorPdfPayload } from '../utils/export/buildCalculatorPdf';
 import { QUOTE_TYPES, applyQuoteTypeToRates, type QuoteType } from '../constants/quoteTypes';
 
 const ToolSeoContent = lazy(() => import('../components/content/ToolSeoContent'));
@@ -143,31 +143,30 @@ export default function CurrencyConverterPage() {
 
   const handleClearData = useCallback(() => {
     setCalculatorMode('simple');
-    setValue(100);
+    setValue(0);
     setFrom(DEFAULT_FROM);
     setTo(DEFAULT_TO);
     setQuoteType('comercial');
   }, [setCalculatorMode]);
 
   const handleSavePdf = useCallback(async () => {
-    const payload = buildCalculatorPdfPayload({
-      activeTool: 'juros',
+    const rateFrom = effectiveRates[from] ?? 0;
+    const rateTo = effectiveRates[to] ?? 1;
+    const pairRate = from === 'BRL' ? 1 / rateTo : to === 'BRL' ? rateFrom : rateFrom / rateTo;
+
+    const payload = buildConversorPdfPayload({
       toolTitle: 'Conversor de Moedas',
       isAdvanced,
-      conversorValue: value,
-      conversorFrom: from,
-      conversorTo: to,
-      conversorResult: result,
-      painelCards: [
-        {
-          titulo: 'Valor convertido',
-          valor: result,
-          subtitulo: `${value.toLocaleString('pt-BR')} ${from} → ${to}`,
-        },
-      ],
+      value,
+      from,
+      to,
+      result,
+      quoteType: isAdvanced ? quoteType : 'comercial',
+      rate: pairRate,
+      lastUpdated: lastUpdated ? formatExchangeTimestamp(lastUpdated) : undefined,
     });
     await exportCalculationPdf(payload);
-  }, [isAdvanced, value, from, to, result]);
+  }, [isAdvanced, value, from, to, result, quoteType, effectiveRates, lastUpdated]);
 
   const content = conversorMoedasContent;
   const canonicalPath = ROUTES.conversorMoedas;
@@ -288,9 +287,12 @@ export default function CurrencyConverterPage() {
             </div>
           </header>
 
-          <div className="p-4 md:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="px-4 md:px-6 lg:px-8 pt-4">
+            <HowToUseButton variant="banner" onClick={() => setHowToUseOpen(true)} />
+          </div>
+
+          <div className="p-4 md:p-6 lg:p-8 pt-4 grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="flex flex-col gap-4 order-2 lg:order-1">
-              <HowToUseButton onClick={() => setHowToUseOpen(true)} />
               <PersonalizeTrigger
                 isAdvanced={isAdvanced}
                 onOpen={() => setCalculatorMode('advanced')}
