@@ -50,6 +50,18 @@ import { HOW_TO_USE } from '../config/howToUse';
 import { EMPTY_FORM_VALUES, emptyAdvancedForTool } from '../constants/defaultFormValues';
 import { calcularPeriodoRescisao } from '../utils/rescisaoDates';
 import {
+  periodicidadeFromState,
+  periodicidadeLabel,
+  periodicidadeResumo,
+  taxaFieldHint,
+  taxaFieldLabel,
+  taxaFieldSuffix,
+  tempoFieldHint,
+  tempoFieldLabel,
+  tempoUnidadeForPeriodicidade,
+  type JurosPeriodicidade,
+} from '../utils/jurosPeriodicity';
+import {
   type AdvancedCalculatorOptions,
 } from '../types/calculator';
 import type { RescisaoMotivo } from '../utils/calculations/toolCalculations';
@@ -382,27 +394,46 @@ export default function CalculatorPage({
     handleTaxaTipoChange(initialTaxaTipo);
   }, [initialTaxaTipo, ratesStatus, selicRate]);
 
-  const handleTaxaPeriodoChange = (novoPeriodo: 'anual' | 'mensal') => {
-    if (novoPeriodo === taxaPeriodo) return;
-    setTaxaPeriodo(novoPeriodo);
-    
-    // Se o tipo já for poupanca, selic ou cdi, atualiza o valor da taxa baseado no novo período
-    if (taxaTipo === 'poupanca') {
-      const poup = calcularTaxaPoupancaVal(selicRate);
-      setTaxaAnual(novoPeriodo === 'anual' ? poup : convertAnualParaMensal(poup));
-    } else if (taxaTipo === 'selic') {
-      setTaxaAnual(novoPeriodo === 'anual' ? selicRate : convertAnualParaMensal(selicRate));
-    } else if (taxaTipo === 'cdi') {
-      const cdi = Math.max(0, selicRate - 0.10);
-      setTaxaAnual(novoPeriodo === 'anual' ? cdi : convertAnualParaMensal(cdi));
-    } else {
-      // Se for manual, converte o valor atual
-      if (novoPeriodo === 'mensal') {
-        setTaxaAnual(convertAnualParaMensal(taxaAnual));
+  const jurosPeriodicidade = periodicidadeFromState(taxaPeriodo);
+
+  const handlePeriodicidadeJuros = useCallback(
+    (modo: JurosPeriodicidade) => {
+      if (modo === jurosPeriodicidade) return;
+      if (modo === 'mensal') {
+        if (taxaPeriodo === 'anual') {
+          if (taxaTipo === 'poupanca') {
+            setTaxaAnual(convertAnualParaMensal(calcularTaxaPoupancaVal(selicRate)));
+          } else if (taxaTipo === 'selic') {
+            setTaxaAnual(convertAnualParaMensal(selicRate));
+          } else if (taxaTipo === 'cdi') {
+            setTaxaAnual(convertAnualParaMensal(Math.max(0, selicRate - 0.10)));
+          } else {
+            setTaxaAnual(convertAnualParaMensal(taxaAnual));
+          }
+        }
+        setTaxaPeriodo('mensal');
+        setTempoUnidade(tempoUnidadeForPeriodicidade('mensal'));
       } else {
-        setTaxaAnual(convertMensalParaAnual(taxaAnual));
+        if (taxaPeriodo === 'mensal') {
+          if (taxaTipo === 'poupanca') {
+            setTaxaAnual(calcularTaxaPoupancaVal(selicRate));
+          } else if (taxaTipo === 'selic') {
+            setTaxaAnual(selicRate);
+          } else if (taxaTipo === 'cdi') {
+            setTaxaAnual(Math.max(0, selicRate - 0.10));
+          } else {
+            setTaxaAnual(convertMensalParaAnual(taxaAnual));
+          }
+        }
+        setTaxaPeriodo('anual');
+        setTempoUnidade(tempoUnidadeForPeriodicidade('anual'));
       }
-    }
+    },
+    [jurosPeriodicidade, taxaPeriodo, taxaTipo, taxaAnual, selicRate],
+  );
+
+  const handleTaxaPeriodoChange = (novoPeriodo: 'anual' | 'mensal') => {
+    handlePeriodicidadeJuros(novoPeriodo === 'mensal' ? 'mensal' : 'anual');
   };
 
   const handleTaxaAnualChange = (val: number) => {
@@ -725,7 +756,7 @@ export default function CalculatorPage({
           {/* LADO ESQUERDO (Width: 1/4) */}
           
           {/* CARD 1: FORMULÁRIO SELECIONADO DA FERRAMENTA ATIVA */}
-          <div className="order-2 lg:order-1 lg:col-span-1 lg:col-start-1 lg:row-start-1 h-fit bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col gap-5 relative overflow-hidden">
+          <div className="order-1 lg:order-1 lg:col-span-1 lg:col-start-1 lg:row-start-1 h-fit calc-panel-form bg-white rounded-2xl border border-slate-100 p-5 sm:p-6 shadow-xs flex flex-col gap-5 relative overflow-hidden">
               
               {/* Decoration Line Top */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-[#800020]"></div>
@@ -737,6 +768,35 @@ export default function CalculatorPage({
                       <Calculator className="w-5 h-5 text-[#800020]" />
                       Simule seu investimento
                     </h2>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-semibold text-slate-700 flex items-center">
+                      Periodicidade da taxa
+                      <FieldHint text="Mensal: taxa ao mês e prazo em meses. Anual: taxa ao ano e prazo em anos." />
+                    </span>
+                    <div
+                      className="grid grid-cols-2 gap-1.5 bg-slate-100/70 p-1 rounded-xl"
+                      role="group"
+                      aria-label="Periodicidade da taxa"
+                    >
+                      {(['mensal', 'anual'] as const).map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => handlePeriodicidadeJuros(p)}
+                          className={`text-xs py-2.5 font-bold rounded-lg transition-all cursor-pointer min-h-[2.75rem] ${
+                            jurosPeriodicidade === p
+                              ? 'bg-white text-[#800020] shadow-xs'
+                              : 'text-slate-600 hover:text-slate-800'
+                          }`}
+                          aria-pressed={jurosPeriodicidade === p}
+                        >
+                          {periodicidadeLabel(p)}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-slate-500 leading-snug">{periodicidadeResumo(jurosPeriodicidade)}</p>
                   </div>
 
                   {/* Campo: Valor Inicial */}
@@ -804,42 +864,31 @@ export default function CalculatorPage({
                     )}
                   </div>
 
-                  <div className="grid grid-cols-5 gap-2">
-                    <div className="col-span-3 flex flex-col gap-1.5">
-                      <label htmlFor="tempo-periodo" className="text-xs font-semibold text-slate-700 flex items-center">
-                        Por quanto tempo
-                        <FieldHint text="Por quantos anos ou meses você vai guardar dinheiro." />
-                      </label>
-                      <input
-                        id="tempo-periodo"
-                        type="number"
-                        value={tempo || ''}
-                        onChange={(e) => setTempo(Math.max(0, parseInt(e.target.value) || 0))}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                        placeholder="0"
-                      />
-                    </div>
-                    <div className="col-span-2 flex flex-col gap-1.5">
-                      <label htmlFor="tempo-unidade" className="text-xs font-semibold text-slate-700">Em</label>
-                      <select
-                        id="tempo-unidade"
-                        value={tempoUnidade}
-                        onChange={(e) => setTempoUnidade(e.target.value as TempoUnidade)}
-                        className="w-full py-2.5 px-1 bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl focus:outline-hidden focus:border-[#800020] cursor-pointer min-h-[2.75rem]"
-                      >
-                        <option value="anos">Anos</option>
-                        <option value="meses">Meses</option>
-                      </select>
-                    </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="tempo-periodo" className="text-xs font-semibold text-slate-700 flex items-center">
+                      {tempoFieldLabel(jurosPeriodicidade)}
+                      <FieldHint text={tempoFieldHint(jurosPeriodicidade)} />
+                    </label>
+                    <input
+                      id="tempo-periodo"
+                      type="number"
+                      min="0"
+                      value={tempo || ''}
+                      onChange={(e) => setTempo(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                      placeholder="0"
+                    />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="taxa-rendimento" className="text-xs font-semibold text-slate-700 flex items-center">
-                      Ganho anual esperado (%)
-                      <FieldHint text="Quanto você espera que o investimento renda por ano, em média." />
+                      {taxaFieldLabel(jurosPeriodicidade)}
+                      <FieldHint text={taxaFieldHint(jurosPeriodicidade)} />
                     </label>
                     <div className="relative">
-                      <span className="absolute right-3.5 top-2.5 text-xs text-slate-500 font-bold">% ao ano</span>
+                      <span className="absolute right-3.5 top-2.5 text-xs text-slate-500 font-bold">
+                        {taxaFieldSuffix(jurosPeriodicidade)}
+                      </span>
                       <input
                         id="taxa-rendimento"
                         type="number"
@@ -847,7 +896,7 @@ export default function CalculatorPage({
                         min="0"
                         value={taxaAnual || ''}
                         onChange={(e) => handleTaxaAnualChange(Math.max(0, parseFloat(e.target.value) || 0))}
-                        className="w-full pl-4 pr-20 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                        className="w-full pl-4 pr-24 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                         placeholder="0"
                       />
                     </div>
@@ -1144,10 +1193,17 @@ export default function CalculatorPage({
           </div>
 
           {/* LADO DIREITO (Width: 3/4) */}
-          <div className="order-1 lg:order-2 lg:col-span-3 lg:col-start-2 lg:row-start-1 flex flex-col gap-8">
+          <div className="order-2 lg:order-2 lg:col-span-3 lg:col-start-2 lg:row-start-1 calc-panel-results flex flex-col gap-6 sm:gap-8">
             
+            {activeTool === 'juros' && (
+              <p className="calc-periodicity-badge w-fit" aria-live="polite">
+                <Percent className="w-3.5 h-3.5 text-[#800020]" aria-hidden="true" />
+                {periodicidadeResumo(jurosPeriodicidade)}
+              </p>
+            )}
+
             {/* GRID DO TOPO: CARDS DE RESULTADOS DESTACADOS */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 items-stretch">
               {calculoResultado.painelTopCards.map((card, index) => {
                 const isHighlight = card.isHighlight;
                 const IconComponent = (() => {
@@ -1170,7 +1226,7 @@ export default function CalculatorPage({
                 return (
                   <div 
                     key={index}
-                    className={`rounded-2xl p-6 shadow-xs flex flex-col justify-between min-h-[145px] relative overflow-hidden transition-all duration-300 ${
+                    className={`calc-card shadow-xs justify-between min-h-[145px] relative overflow-hidden transition-all duration-300 ${
                       isHighlight 
                         ? 'bg-[#800020] text-white shadow-md' 
                         : 'bg-white border border-slate-100 text-slate-900'
@@ -1185,7 +1241,7 @@ export default function CalculatorPage({
                     </div>
 
                     <div className="min-w-0 pr-8">
-                      <span className={`text-[10px] font-bold tracking-wider uppercase block ${isHighlight ? 'text-white/90' : 'text-slate-500'}`}>
+                      <span className={`calc-card-title ${isHighlight ? 'text-white/90' : 'text-slate-500'}`}>
                         {card.titulo}
                       </span>
                       <CurrencyAmount

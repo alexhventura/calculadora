@@ -22,7 +22,7 @@ function taxaMensalFromInput(
   taxaPeriodo: 'anual' | 'mensal',
   periodoExtendido?: JurosAdvancedOptions['taxaPeriodoExtendido'],
 ): number {
-  const periodo = periodoExtendido ?? taxaPeriodo;
+  const periodo = periodoExtendido === 'diaria' ? 'diaria' : taxaPeriodo;
   if (periodo === 'diaria') {
     return Math.pow(1 + taxaValor / 100, 30) - 1;
   }

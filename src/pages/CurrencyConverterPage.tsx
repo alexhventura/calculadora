@@ -293,8 +293,8 @@ export default function CurrencyConverterPage() {
             <HowToUseButton variant="banner" onClick={() => setHowToUseOpen(true)} />
           </div>
 
-          <div className="p-4 md:p-6 lg:p-8 pt-4 grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="flex flex-col gap-4 order-2 lg:order-1">
+          <div className="p-4 md:p-6 lg:p-8 pt-4 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+            <div className="flex flex-col gap-4 order-1 lg:order-1 calc-panel-form">
               <PersonalizeTrigger
                 isAdvanced={isAdvanced}
                 onOpen={() => setCalculatorMode('advanced')}
@@ -331,7 +331,7 @@ export default function CurrencyConverterPage() {
               <CalculatorActionBar onClear={handleClearData} onSavePdf={handleSavePdf} />
             </div>
 
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 order-2 lg:order-2 calc-panel-results">
               {/* Conversões rápidas */}
               <section aria-labelledby="quick-convert-heading">
                 <h3 id="quick-convert-heading" className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">

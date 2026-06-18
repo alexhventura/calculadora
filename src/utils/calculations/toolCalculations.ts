@@ -196,7 +196,7 @@ export function calculateToolResult(input: ToolCalculationInput): ToolCalculatio
         {
           titulo: 'Valor acumulado',
           valor: compostosRes.totais.valorBrutoUser,
-          subtitulo: `Crescimento de ${((compostosRes.totais.valorBrutoUser / Math.max(1, compostosRes.totais.totalInvestidoUser) - 1) * 100).toFixed(1)}%`,
+          subtitulo: `${taxaPeriodo === 'mensal' ? 'Taxa mensal' : 'Taxa anual'} · ${tempoUnidade === 'meses' ? `${tempo} meses` : `${tempo} anos`}`,
           isHighlight: true,
           iconType: 'percent',
         },

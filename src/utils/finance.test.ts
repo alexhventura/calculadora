@@ -41,6 +41,22 @@ describe('calcularJurosCompostos', () => {
     const { registros } = calcularJurosCompostos(1000, 0, 99999, 'meses', 10, 'anual');
     expect(registros.length).toBeLessThanOrEqual(7201);
   });
+
+  it('diferencia periodicidade mensal e anual com mesma taxa nominal no mesmo prazo', () => {
+    const mensal = calcularJurosCompostos(1000, 0, 12, 'meses', 10, 'mensal', 14.5, 4.25);
+    const anual = calcularJurosCompostos(1000, 0, 12, 'meses', 10, 'anual', 14.5, 4.25);
+    expect(mensal.totais.valorBrutoUser).toBeGreaterThan(3000);
+    expect(anual.totais.valorBrutoUser).toBeCloseTo(1100, 0);
+    expect(mensal.totais.valorBrutoUser).not.toBeCloseTo(anual.totais.valorBrutoUser, 0);
+  });
+
+  it('projeta 12 anos com taxa anual em mais períodos que 12 meses mensais', () => {
+    const dozeMesesMensal = calcularJurosCompostos(1000, 0, 12, 'meses', 10, 'mensal', 14.5, 4.25);
+    const dozeAnosAnual = calcularJurosCompostos(1000, 0, 12, 'anos', 10, 'anual', 14.5, 4.25);
+    expect(dozeMesesMensal.registros).toHaveLength(13);
+    expect(dozeAnosAnual.registros).toHaveLength(145);
+    expect(dozeAnosAnual.totais.valorBrutoUser).toBeGreaterThan(dozeMesesMensal.totais.valorBrutoUser);
+  });
 });
 
 describe('converterMatrizMoedas', () => {
