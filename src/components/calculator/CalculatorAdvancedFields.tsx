@@ -94,23 +94,6 @@ export default function CalculatorAdvancedFields({
     return (
       <AdvancedSection defaultOpen={defaultOpen} id={sectionId}>
         <div className="flex flex-col gap-1">
-          <FieldLabel hint="Escolha se a taxa é ao ano ou ao mês.">Taxa ao ano ou ao mês</FieldLabel>
-          <div className="grid grid-cols-2 gap-1.5 bg-slate-100/70 p-1 rounded-xl">
-            {(['anual', 'mensal'] as const).map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => jurosUi.onTaxaPeriodoChange(p)}
-                className={`text-[10px] py-2.5 font-bold rounded-lg transition-all cursor-pointer min-h-[2.75rem] ${
-                  taxaPeriodo === p ? 'bg-white text-[#800020] shadow-xs' : 'text-slate-600'
-                }`}
-              >
-                {p === 'anual' ? 'Ao ano' : 'Ao mês'}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-col gap-1">
           <FieldLabel hint="Use referências de mercado ou informe manualmente.">Referência de rendimento</FieldLabel>
           <div className="grid grid-cols-2 gap-1.5">
             {(

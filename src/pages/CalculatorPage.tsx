@@ -65,6 +65,11 @@ import {
   type JurosPeriodicidade,
 } from '../utils/jurosPeriodicity';
 import {
+  APOSENTADORIA_IDADE_INVALIDA_MSG,
+  aposentadoriaAnosRestantes,
+  isAposentadoriaIdadeInvalida,
+} from '../utils/aposentadoriaAge';
+import {
   type AdvancedCalculatorOptions,
 } from '../types/calculator';
 import type { RescisaoMotivo } from '../utils/calculations/toolCalculations';
@@ -325,11 +330,24 @@ export default function CalculatorPage({
 
   const isCalcStale = hasCalculated && lastCalcFingerprint !== inputFingerprint;
 
+  const aposentadoriaIdadeInvalida = useMemo(
+    () => isAposentadoriaIdadeInvalida(aposentadoriaIdadeAtual, aposentadoriaIdadeAlvo),
+    [aposentadoriaIdadeAtual, aposentadoriaIdadeAlvo],
+  );
+
+  const aposentadoriaTempoRestante = useMemo(
+    () => aposentadoriaAnosRestantes(aposentadoriaIdadeAtual, aposentadoriaIdadeAlvo),
+    [aposentadoriaIdadeAtual, aposentadoriaIdadeAlvo],
+  );
+
+  const calculateBlocked = activeTool === 'aposentadoria' && aposentadoriaIdadeInvalida;
+
   const handleCalculateClick = useCallback(() => {
+    if (calculateBlocked) return;
     const input = buildCalculationInput();
     calculate(input);
     setLastCalcFingerprint(JSON.stringify(input));
-  }, [buildCalculationInput, calculate]);
+  }, [buildCalculationInput, calculate, calculateBlocked]);
 
   const handleAdvancedToggle = useCallback(
     (open: boolean) => {
@@ -839,13 +857,41 @@ export default function CalculatorPage({
                   </div>
 
                   <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-semibold text-slate-700 flex items-center">
+                      Tipo da taxa
+                      <FieldHint text="Mensal: a taxa informada é ao mês e o prazo em meses. Anual: a taxa é ao ano e o prazo em anos." />
+                    </span>
+                    <div
+                      className="grid grid-cols-2 gap-1.5 bg-slate-100/70 p-1 rounded-xl"
+                      role="group"
+                      aria-label="Tipo da taxa"
+                    >
+                      {(['mensal', 'anual'] as const).map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => handlePeriodicidadeJuros(p)}
+                          className={`text-xs py-2.5 font-bold rounded-lg transition-all cursor-pointer min-h-[2.75rem] ${
+                            jurosPeriodicidade === p
+                              ? 'bg-white text-[#800020] shadow-xs'
+                              : 'text-slate-600 hover:text-slate-800'
+                          }`}
+                          aria-pressed={jurosPeriodicidade === p}
+                        >
+                          {periodicidadeLabel(p)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
                     <label htmlFor="taxa-rendimento" className="text-xs font-semibold text-slate-700 flex items-center">
-                      {isAdvanced ? taxaFieldLabel(jurosPeriodicidade) : 'Taxa de juros (% ao ano)'}
-                      <FieldHint text={isAdvanced ? taxaFieldHint(jurosPeriodicidade) : 'Rentabilidade média anual esperada do investimento.'} />
+                      {taxaFieldLabel(jurosPeriodicidade)}
+                      <FieldHint text={taxaFieldHint(jurosPeriodicidade)} />
                     </label>
                     <div className="relative">
                       <span className="absolute right-3.5 top-2.5 text-xs text-slate-500 font-bold">
-                        {isAdvanced ? taxaFieldSuffix(jurosPeriodicidade) : '% ao ano'}
+                        {taxaFieldSuffix(jurosPeriodicidade)}
                       </span>
                       <input
                         id="taxa-rendimento"
@@ -862,8 +908,8 @@ export default function CalculatorPage({
 
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="tempo-periodo" className="text-xs font-semibold text-slate-700 flex items-center">
-                      {isAdvanced ? tempoFieldLabel(jurosPeriodicidade) : 'Prazo (anos)'}
-                      <FieldHint text={isAdvanced ? tempoFieldHint(jurosPeriodicidade) : 'Por quantos anos você vai investir.'} />
+                      {tempoFieldLabel(jurosPeriodicidade)}
+                      <FieldHint text={tempoFieldHint(jurosPeriodicidade)} />
                     </label>
                     <input
                       id="tempo-periodo"
@@ -945,24 +991,73 @@ export default function CalculatorPage({
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="aposentadoria-idade-alvo" className="text-xs font-semibold text-slate-700 flex items-center">
-                      Idade desejada para aposentar
-                      <FieldHint text="Com quantos anos você quer parar de trabalhar." />
+                    <label htmlFor="aposentadoria-idade-atual" className="text-xs font-semibold text-slate-700 flex items-center">
+                      Idade atual
+                      <FieldHint text="Quantos anos você tem hoje." />
                     </label>
                     <input
-                      id="aposentadoria-idade-alvo"
+                      id="aposentadoria-idade-atual"
                       type="number"
-                      min={Math.max(2, aposentadoriaIdadeAtual + 1)}
+                      min="1"
                       max="120"
-                      value={aposentadoriaIdadeAlvo || ''}
+                      value={aposentadoriaIdadeAtual || ''}
                       onChange={(e) => {
-                        const minAlvo = Math.max(2, aposentadoriaIdadeAtual + 1);
-                        setAposentadoriaIdadeAlvo(Math.max(minAlvo, Math.min(120, parseInt(e.target.value) || minAlvo)));
+                        const raw = e.target.value;
+                        if (raw === '') {
+                          setAposentadoriaIdadeAtual(0);
+                          return;
+                        }
+                        setAposentadoriaIdadeAtual(Math.max(1, Math.min(120, parseInt(raw, 10) || 0)));
                       }}
                       className="calc-field-input w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                       placeholder="0"
                     />
                   </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="aposentadoria-idade-alvo" className="text-xs font-semibold text-slate-700 flex items-center">
+                      Idade desejada para aposentadoria
+                      <FieldHint text="Com quantos anos você pretende se aposentar." />
+                    </label>
+                    <input
+                      id="aposentadoria-idade-alvo"
+                      type="number"
+                      min="1"
+                      max="120"
+                      value={aposentadoriaIdadeAlvo || ''}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        if (raw === '') {
+                          setAposentadoriaIdadeAlvo(0);
+                          return;
+                        }
+                        setAposentadoriaIdadeAlvo(Math.max(1, Math.min(120, parseInt(raw, 10) || 0)));
+                      }}
+                      className={`calc-field-input w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem] ${
+                        aposentadoriaIdadeInvalida
+                          ? 'border-rose-300 focus:border-rose-500'
+                          : 'border-slate-200 focus:border-[#800020]'
+                      }`}
+                      placeholder="0"
+                      aria-invalid={aposentadoriaIdadeInvalida}
+                      aria-describedby={aposentadoriaIdadeInvalida ? 'aposentadoria-idade-erro' : undefined}
+                    />
+                  </div>
+
+                  {aposentadoriaIdadeInvalida ? (
+                    <p
+                      id="aposentadoria-idade-erro"
+                      role="alert"
+                      className="text-xs font-medium text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2 leading-snug"
+                    >
+                      {APOSENTADORIA_IDADE_INVALIDA_MSG}
+                    </p>
+                  ) : aposentadoriaTempoRestante !== null ? (
+                    <p className="text-xs font-semibold text-[#800020] bg-rose-50/50 border border-rose-100/80 rounded-lg px-3 py-2 leading-snug">
+                      Você possui {aposentadoriaTempoRestante}{' '}
+                      {aposentadoriaTempoRestante === 1 ? 'ano' : 'anos'} até a aposentadoria.
+                    </p>
+                  ) : null}
                 </>
               )}
 
@@ -1020,6 +1115,7 @@ export default function CalculatorPage({
                 onClick={handleCalculateClick}
                 isRecalculate={hasCalculated}
                 isStale={isCalcStale}
+                disabled={calculateBlocked}
               />
 
               <CollapsibleAdvancedPanel
@@ -1028,42 +1124,12 @@ export default function CalculatorPage({
                 label={activeTool === 'aposentadoria' ? 'Opções avançadas' : 'Personalizar Simulação'}
               >
                 {activeTool === 'juros' && (
-                  <>
-                    <div className="flex flex-col gap-1.5">
-                      <span className="text-xs font-semibold text-slate-700 flex items-center">
-                        Periodicidade da taxa
-                        <FieldHint text="Mensal: taxa ao mês e prazo em meses. Anual: taxa ao ano e prazo em anos." />
-                      </span>
-                      <div
-                        className="grid grid-cols-2 gap-1.5 bg-slate-100/70 p-1 rounded-xl"
-                        role="group"
-                        aria-label="Periodicidade da taxa"
-                      >
-                        {(['mensal', 'anual'] as const).map((p) => (
-                          <button
-                            key={p}
-                            type="button"
-                            onClick={() => handlePeriodicidadeJuros(p)}
-                            className={`text-xs py-2.5 font-bold rounded-lg transition-all cursor-pointer min-h-[2.75rem] ${
-                              jurosPeriodicidade === p
-                                ? 'bg-white text-[#800020] shadow-xs'
-                                : 'text-slate-600 hover:text-slate-800'
-                            }`}
-                            aria-pressed={jurosPeriodicidade === p}
-                          >
-                            {periodicidadeLabel(p)}
-                          </button>
-                        ))}
-                      </div>
-                      <p className="text-[10px] text-slate-500 leading-snug">{periodicidadeResumo(jurosPeriodicidade)}</p>
-                    </div>
-                    <p className="text-[10px] text-slate-500 leading-snug bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 flex items-start gap-1.5">
-                      <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[#800020]" aria-hidden="true" />
-                      <span>
-                        Quer calcular <strong className="font-semibold text-slate-600">juros simples</strong>? Deixe a taxa em 0% — o resultado considerará apenas o valor investido, sem capitalização.
-                      </span>
-                    </p>
-                  </>
+                  <p className="text-[10px] text-slate-500 leading-snug bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 flex items-start gap-1.5">
+                    <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[#800020]" aria-hidden="true" />
+                    <span>
+                      Quer calcular <strong className="font-semibold text-slate-600">juros simples</strong>? Deixe a taxa em 0% — o resultado considerará apenas o valor investido, sem capitalização.
+                    </span>
+                  </p>
                 )}
 
                 {activeTool === 'clt-pj' && (
@@ -1117,47 +1183,23 @@ export default function CalculatorPage({
                 )}
 
                 {activeTool === 'aposentadoria' && (
-                  <>
-                    <div className="flex flex-col gap-1.5">
-                      <label htmlFor="aposentadoria-idade-atual" className="text-xs font-semibold text-slate-700 flex items-center">
-                        Sua idade hoje
-                        <FieldHint text="Idade atual usada para calcular o tempo até a aposentadoria." />
-                      </label>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-slate-700 flex items-center">
+                      Renda mensal desejada (R$)
+                      <FieldHint text="Quanto você quer receber por mês na aposentadoria." />
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
                       <input
-                        id="aposentadoria-idade-atual"
-                        type="number"
-                        min="1"
-                        max="120"
-                        value={aposentadoriaIdadeAtual || ''}
-                        onChange={(e) => {
-                          const idade = Math.max(1, Math.min(120, parseInt(e.target.value) || 1));
-                          setAposentadoriaIdadeAtual(idade);
-                          if (aposentadoriaIdadeAlvo <= idade) {
-                            setAposentadoriaIdadeAlvo(Math.min(120, idade + 1));
-                          }
-                        }}
-                        className="calc-field-input w-full px-3.5 py-2.5 bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                        placeholder="0"
+                        type="text"
+                        inputMode="numeric"
+                        value={aposentadoriaRendaDesejadaStr}
+                        onChange={(e) => setAposentadoriaRendaDesejadaStr(formatMilhar(e.target.value))}
+                        className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                        placeholder="0,00"
                       />
                     </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-semibold text-slate-700 flex items-center">
-                        Renda mensal desejada (R$)
-                        <FieldHint text="Quanto você quer receber por mês na aposentadoria." />
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={aposentadoriaRendaDesejadaStr}
-                          onChange={(e) => setAposentadoriaRendaDesejadaStr(formatMilhar(e.target.value))}
-                          className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                          placeholder="0,00"
-                        />
-                      </div>
-                    </div>
-                  </>
+                  </div>
                 )}
 
                 {activeTool === 'rescisao' && (
