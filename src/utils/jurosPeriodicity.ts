@@ -22,6 +22,19 @@ export function periodicidadeResumo(p: JurosPeriodicidade): string {
     : 'Taxa ao ano · prazo em anos';
 }
 
+export function periodicidadeFromTempoUnidade(tempoUnidade: TempoUnidade): JurosPeriodicidade {
+  return tempoUnidade === 'meses' ? 'mensal' : 'anual';
+}
+
+export function periodicidadeResumoCombinado(
+  taxa: JurosPeriodicidade,
+  tempo: JurosPeriodicidade,
+): string {
+  const taxaLabel = taxa === 'mensal' ? 'Taxa ao mês' : 'Taxa ao ano';
+  const tempoLabel = tempo === 'mensal' ? 'prazo em meses' : 'prazo em anos';
+  return `${taxaLabel} · ${tempoLabel}`;
+}
+
 export function taxaFieldLabel(p: JurosPeriodicidade): string {
   return p === 'mensal' ? 'Ganho mensal esperado (%)' : 'Ganho anual esperado (%)';
 }

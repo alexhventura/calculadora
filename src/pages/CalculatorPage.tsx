@@ -54,8 +54,9 @@ import { EMPTY_FORM_VALUES, emptyAdvancedForTool } from '../constants/defaultFor
 import { calcularPeriodoRescisao } from '../utils/rescisaoDates';
 import {
   periodicidadeFromState,
+  periodicidadeFromTempoUnidade,
   periodicidadeLabel,
-  periodicidadeResumo,
+  periodicidadeResumoCombinado,
   taxaFieldHint,
   taxaFieldLabel,
   taxaFieldSuffix,
@@ -448,11 +449,12 @@ export default function CalculatorPage({
     handleTaxaTipoChange(initialTaxaTipo);
   }, [initialTaxaTipo, ratesStatus, selicRate]);
 
-  const jurosPeriodicidade = periodicidadeFromState(taxaPeriodo);
+  const jurosTaxaPeriodicidade = periodicidadeFromState(taxaPeriodo);
+  const jurosTempoPeriodicidade = periodicidadeFromTempoUnidade(tempoUnidade);
 
-  const handlePeriodicidadeJuros = useCallback(
+  const handleTaxaPeriodoOnlyChange = useCallback(
     (modo: JurosPeriodicidade) => {
-      if (modo === jurosPeriodicidade) return;
+      if (modo === jurosTaxaPeriodicidade) return;
       if (modo === 'mensal') {
         if (taxaPeriodo === 'anual') {
           if (taxaTipo === 'poupanca') {
@@ -466,7 +468,6 @@ export default function CalculatorPage({
           }
         }
         setTaxaPeriodo('mensal');
-        setTempoUnidade(tempoUnidadeForPeriodicidade('mensal'));
       } else {
         if (taxaPeriodo === 'mensal') {
           if (taxaTipo === 'poupanca') {
@@ -480,14 +481,21 @@ export default function CalculatorPage({
           }
         }
         setTaxaPeriodo('anual');
-        setTempoUnidade(tempoUnidadeForPeriodicidade('anual'));
       }
     },
-    [jurosPeriodicidade, taxaPeriodo, taxaTipo, taxaAnual, selicRate],
+    [jurosTaxaPeriodicidade, taxaPeriodo, taxaTipo, taxaAnual, selicRate],
+  );
+
+  const handleTempoUnidadeOnlyChange = useCallback(
+    (modo: JurosPeriodicidade) => {
+      if (modo === jurosTempoPeriodicidade) return;
+      setTempoUnidade(tempoUnidadeForPeriodicidade(modo));
+    },
+    [jurosTempoPeriodicidade],
   );
 
   const handleTaxaPeriodoChange = (novoPeriodo: 'anual' | 'mensal') => {
-    handlePeriodicidadeJuros(novoPeriodo === 'mensal' ? 'mensal' : 'anual');
+    handleTaxaPeriodoOnlyChange(novoPeriodo === 'mensal' ? 'mensal' : 'anual');
   };
 
   const handleTaxaAnualChange = (val: number) => {
@@ -861,7 +869,7 @@ export default function CalculatorPage({
                   <div className="flex flex-col gap-1.5">
                     <span className="text-xs font-semibold text-slate-700 flex items-center">
                       Tipo da taxa
-                      <FieldHint text="Mensal: a taxa informada é ao mês e o prazo em meses. Anual: a taxa é ao ano e o prazo em anos." />
+                      <FieldHint text="Mensal: a taxa informada é ao mês. Anual: a taxa informada é ao ano." />
                     </span>
                     <div
                       className="grid grid-cols-2 gap-1.5 bg-slate-100/70 p-1 rounded-xl"
@@ -872,25 +880,24 @@ export default function CalculatorPage({
                         <button
                           key={p}
                           type="button"
-                          onClick={() => handlePeriodicidadeJuros(p)}
+                          onClick={() => handleTaxaPeriodoOnlyChange(p)}
                           className={`text-xs py-2.5 font-bold rounded-lg transition-all cursor-pointer min-h-[2.75rem] ${
-                            jurosPeriodicidade === p
+                            jurosTaxaPeriodicidade === p
                               ? 'bg-white text-[#800020] shadow-xs'
                               : 'text-slate-600 hover:text-slate-800'
                           }`}
-                          aria-pressed={jurosPeriodicidade === p}
+                          aria-pressed={jurosTaxaPeriodicidade === p}
                         >
                           {periodicidadeLabel(p)}
                         </button>
                       ))}
                     </div>
-                    <p className="text-[10px] text-slate-500 leading-snug">{periodicidadeResumo(jurosPeriodicidade)}</p>
                   </div>
 
                   <div className="flex flex-col gap-1.5">
                     <span className="text-xs font-semibold text-slate-700 flex items-center">
                       Prazo do investimento
-                      <FieldHint text="Meses: informe a duração em meses. Anos: informe a duração em anos." />
+                      <FieldHint text="Meses: informe a duração em meses. Anos: informe a duração em anos. Independente do tipo da taxa." />
                     </span>
                     <div
                       className="grid grid-cols-2 gap-1.5 bg-slate-100/70 p-1 rounded-xl"
@@ -901,13 +908,13 @@ export default function CalculatorPage({
                         <button
                           key={p}
                           type="button"
-                          onClick={() => handlePeriodicidadeJuros(p)}
+                          onClick={() => handleTempoUnidadeOnlyChange(p)}
                           className={`text-xs py-2.5 font-bold rounded-lg transition-all cursor-pointer min-h-[2.75rem] ${
-                            jurosPeriodicidade === p
+                            jurosTempoPeriodicidade === p
                               ? 'bg-white text-[#800020] shadow-xs'
                               : 'text-slate-600 hover:text-slate-800'
                           }`}
-                          aria-pressed={jurosPeriodicidade === p}
+                          aria-pressed={jurosTempoPeriodicidade === p}
                         >
                           {prazoInvestimentoLabel(p)}
                         </button>
@@ -917,12 +924,12 @@ export default function CalculatorPage({
 
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="taxa-rendimento" className="text-xs font-semibold text-slate-700 flex items-center">
-                      {taxaFieldLabel(jurosPeriodicidade)}
-                      <FieldHint text={taxaFieldHint(jurosPeriodicidade)} />
+                      {taxaFieldLabel(jurosTaxaPeriodicidade)}
+                      <FieldHint text={taxaFieldHint(jurosTaxaPeriodicidade)} />
                     </label>
                     <div className="relative">
                       <span className="absolute right-3.5 top-2.5 text-xs text-slate-500 font-bold">
-                        {taxaFieldSuffix(jurosPeriodicidade)}
+                        {taxaFieldSuffix(jurosTaxaPeriodicidade)}
                       </span>
                       <input
                         id="taxa-rendimento"
@@ -939,12 +946,12 @@ export default function CalculatorPage({
 
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="tempo-periodo" className="text-xs font-semibold text-slate-700 flex items-center">
-                      {tempoFieldLabel(jurosPeriodicidade)}
-                      <FieldHint text={tempoFieldHint(jurosPeriodicidade)} />
+                      {tempoFieldLabel(jurosTempoPeriodicidade)}
+                      <FieldHint text={tempoFieldHint(jurosTempoPeriodicidade)} />
                     </label>
                     <div className="relative">
                       <span className="absolute right-3.5 top-2.5 text-xs text-slate-500 font-bold">
-                        {tempoFieldSuffix(jurosPeriodicidade)}
+                        {tempoFieldSuffix(jurosTempoPeriodicidade)}
                       </span>
                       <input
                         id="tempo-periodo"
@@ -998,30 +1005,6 @@ export default function CalculatorPage({
                         onChange={(e) => setAposentadoriaPatrimonioAtualStr(formatMilhar(e.target.value))}
                         className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                         placeholder="0"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700 flex items-center">
-                      Aporte mensal (R$)
-                      <FieldHint text="Quanto você guarda ou pretende guardar por mês." />
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={formatMilhar(String(advancedOptions.aposentadoria.aporteMensalAtual))}
-                        onChange={(e) =>
-                          patchAdvancedOptions({
-                            aposentadoria: {
-                              aporteMensalAtual: parseMilhar(e.target.value) || 0,
-                            },
-                          })
-                        }
-                        className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                        placeholder="0,00"
                       />
                     </div>
                   </div>
@@ -1309,7 +1292,7 @@ export default function CalculatorPage({
             {activeTool === 'juros' && (
               <p className="calc-periodicity-badge w-fit" aria-live="polite">
                 <Percent className="w-3.5 h-3.5 text-[#800020]" aria-hidden="true" />
-                {periodicidadeResumo(jurosPeriodicidade)}
+                {periodicidadeResumoCombinado(jurosTaxaPeriodicidade, jurosTempoPeriodicidade)}
               </p>
             )}
 
