@@ -134,6 +134,35 @@ body {
   line-height: 1.25;
 }
 
+/* Botão principal de cálculo */
+.calc-btn-primary {
+  background: #800020;
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 14px rgba(128, 0, 32, 0.18);
+}
+
+.calc-btn-primary:hover {
+  background: #600018;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08), 0 6px 18px rgba(128, 0, 32, 0.22);
+}
+
+.calc-btn-primary:active {
+  transform: translateY(0);
+}
+
+.calc-advanced-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.calc-advanced-panel[open] {
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.calc-quick-guide summary::-webkit-details-marker {
+  display: none;
+}
+
 /* Valores monetários em cards — escala fluida por comprimento, sem quebra de linha */
 .currency-amount-fluid {
   font-size: var(--currency-size, clamp(

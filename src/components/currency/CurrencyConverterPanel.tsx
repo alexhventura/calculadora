@@ -13,6 +13,7 @@ interface CurrencyConverterPanelProps {
   onSwap: () => void;
   result: number;
   currencies: CurrencyInfo[];
+  showResult?: boolean;
 }
 
 export default function CurrencyConverterPanel({
@@ -25,6 +26,7 @@ export default function CurrencyConverterPanel({
   onSwap,
   result,
   currencies,
+  showResult = true,
 }: CurrencyConverterPanelProps) {
   return (
     <div className="flex flex-col gap-4">
@@ -76,9 +78,15 @@ export default function CurrencyConverterPanel({
 
       <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-5 flex flex-col items-center text-center">
         <span className="text-[10px] font-semibold tracking-wide text-amber-700 uppercase">Resultado</span>
-        <p className="font-mono text-xl md:text-2xl font-extrabold text-[#704214] mt-1 break-all">
-          {formatConvertedValue(result, to)}
-        </p>
+        {showResult ? (
+          <p className="font-mono text-xl md:text-2xl font-extrabold text-[#704214] mt-1 break-all">
+            {formatConvertedValue(result, to)}
+          </p>
+        ) : (
+          <p className="text-xs text-slate-500 mt-2 leading-relaxed max-w-[220px]">
+            Clique em Calcular para ver o valor convertido.
+          </p>
+        )}
         <p className="text-[10px] text-slate-500 mt-1">
           {from} → {to}
         </p>

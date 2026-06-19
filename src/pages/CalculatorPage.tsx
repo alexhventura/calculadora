@@ -34,9 +34,11 @@ import type { ActiveTool } from '../utils/calculations/toolCalculations';
 import { formatMilhar, parseMilhar, formatBRL } from '../utils/format';
 import { useEconomicRates } from '../hooks/useEconomicRates';
 import { useExchangeRates } from '../hooks/useExchangeRates';
-import { calculateToolResult } from '../utils/calculations/toolCalculations';
-import ToolQuickGuide from '../components/calculator/ToolQuickGuide';
-import PersonalizeTrigger from '../components/calculator/PersonalizeTrigger';
+import { calculateToolResult, type ToolCalculationInput } from '../utils/calculations/toolCalculations';
+import QuickGuideCollapsible from '../components/calculator/QuickGuideCollapsible';
+import CollapsibleAdvancedPanel from '../components/calculator/CollapsibleAdvancedPanel';
+import CalculateButton from '../components/calculator/CalculateButton';
+import ResultsPlaceholder from '../components/calculator/ResultsPlaceholder';
 import CalculatorAdvancedFields from '../components/calculator/CalculatorAdvancedFields';
 const MethodologyPanel = lazy(() => import('../components/calculator/MethodologyPanel'));
 import FieldHint from '../components/calculator/FieldHint';
@@ -45,6 +47,7 @@ const HowToUseModal = lazy(() => import('../components/calculator/HowToUseModal'
 import CalculatorActionBar from '../components/calculator/CalculatorActionBar';
 import CurrencyAmount from '../components/calculator/CurrencyAmount';
 import { useCalculatorMode } from '../hooks/useCalculatorMode';
+import { useCalculateGate } from '../hooks/useCalculateGate';
 import { TOOL_GUIDES } from '../config/toolGuides';
 import { HOW_TO_USE } from '../config/howToUse';
 import { EMPTY_FORM_VALUES, emptyAdvancedForTool } from '../constants/defaultFormValues';
@@ -172,18 +175,26 @@ export default function CalculatorPage({
   const [rescisaoMotivo, setRescisaoMotivo] = useState<RescisaoMotivo>(EMPTY_FORM_VALUES.rescisao.motivo);
 
   const { setMode: setCalculatorMode, isAdvanced } = useCalculatorMode(activeTool);
+  const { calcSnapshot, calcVersion, calculate, reset: resetCalculate, hasCalculated } =
+    useCalculateGate(activeTool);
+  const [lastCalcFingerprint, setLastCalcFingerprint] = useState<string | null>(null);
   const [advancedOptions, setAdvancedOptions] = useState<AdvancedCalculatorOptions>(() =>
     emptyAdvancedForTool(initialTool ?? 'juros'),
   );
 
-  const patchAdvancedOptions = useCallback((patch: Partial<AdvancedCalculatorOptions>) => {
-    setAdvancedOptions((prev) => ({
-      juros: { ...prev.juros, ...patch.juros },
-      cltPj: { ...prev.cltPj, ...patch.cltPj },
-      aposentadoria: { ...prev.aposentadoria, ...patch.aposentadoria },
-      rescisao: { ...prev.rescisao, ...patch.rescisao },
-    }));
-  }, []);
+  const patchAdvancedOptions = useCallback(
+    (patch: {
+      [K in keyof AdvancedCalculatorOptions]?: Partial<AdvancedCalculatorOptions[K]>;
+    }) => {
+      setAdvancedOptions((prev) => ({
+        juros: { ...prev.juros, ...patch.juros },
+        cltPj: { ...prev.cltPj, ...patch.cltPj },
+        aposentadoria: { ...prev.aposentadoria, ...patch.aposentadoria },
+        rescisao: { ...prev.rescisao, ...patch.rescisao },
+      }));
+    },
+    [],
+  );
 
   const rescisaoPeriodoDerivado = useMemo(
     () => calcularPeriodoRescisao(rescisaoDataAdmissao, rescisaoDataDesligamento),
@@ -255,61 +266,84 @@ export default function CalculatorPage({
 
   const rescisaoSalarioNum = useMemo(() => parseMilhar(rescisaoSalarioStr), [rescisaoSalarioStr]);
 
-  const calculoResultado = useMemo(
-    () =>
-      calculateToolResult({
-        activeTool,
-        valorInicialNum,
-        aporteMensalNum,
-        tempo,
-        tempoUnidade,
-        taxaAnual,
-        taxaPeriodo,
-        selicRate,
-        ipcaRate,
-        salarioCltNum,
-        cltVrNum,
-        cltSaudeNum,
-        cltOutrosNum,
-        aposentadoriaIdadeAtual,
-        aposentadoriaIdadeAlvo,
-        aposentadoriaRendaDesejadaNum,
-        aposentadoriaPatrimonioAtualNum,
-        aposentadoriaSalarioAtualNum,
-        rescisaoSalarioNum,
-        rescisaoMesesTrabalhados: rescisaoMesesEfetivos,
-        rescisaoMotivo,
-        rescisaoDiasTrabalhados: rescisaoDiasEfetivos,
-        advancedMode: isAdvanced,
-        advanced: advancedOptions,
-      }),
-    [
-      activeTool,
-      valorInicialNum,
-      aporteMensalNum,
-      tempo,
-      tempoUnidade,
-      taxaAnual,
-      taxaPeriodo,
-      selicRate,
-      ipcaRate,
-      salarioCltNum,
-      cltVrNum,
-      cltSaudeNum,
-      cltOutrosNum,
-      aposentadoriaIdadeAtual,
-      aposentadoriaIdadeAlvo,
-      aposentadoriaRendaDesejadaNum,
-      aposentadoriaPatrimonioAtualNum,
-      aposentadoriaSalarioAtualNum,
-      rescisaoSalarioNum,
-      rescisaoMesesEfetivos,
-      rescisaoMotivo,
-      rescisaoDiasEfetivos,
-      isAdvanced,
-      advancedOptions,
-    ],
+  const buildCalculationInput = useCallback((): ToolCalculationInput => ({
+    activeTool,
+    valorInicialNum,
+    aporteMensalNum,
+    tempo,
+    tempoUnidade,
+    taxaAnual,
+    taxaPeriodo,
+    selicRate,
+    ipcaRate,
+    salarioCltNum,
+    cltVrNum,
+    cltSaudeNum,
+    cltOutrosNum,
+    aposentadoriaIdadeAtual,
+    aposentadoriaIdadeAlvo,
+    aposentadoriaRendaDesejadaNum,
+    aposentadoriaPatrimonioAtualNum,
+    aposentadoriaSalarioAtualNum,
+    rescisaoSalarioNum,
+    rescisaoMesesTrabalhados: rescisaoMesesEfetivos,
+    rescisaoMotivo,
+    rescisaoDiasTrabalhados: rescisaoDiasEfetivos,
+    advancedMode: isAdvanced,
+    advanced: advancedOptions,
+  }), [
+    activeTool,
+    valorInicialNum,
+    aporteMensalNum,
+    tempo,
+    tempoUnidade,
+    taxaAnual,
+    taxaPeriodo,
+    selicRate,
+    ipcaRate,
+    salarioCltNum,
+    cltVrNum,
+    cltSaudeNum,
+    cltOutrosNum,
+    aposentadoriaIdadeAtual,
+    aposentadoriaIdadeAlvo,
+    aposentadoriaRendaDesejadaNum,
+    aposentadoriaPatrimonioAtualNum,
+    aposentadoriaSalarioAtualNum,
+    rescisaoSalarioNum,
+    rescisaoMesesEfetivos,
+    rescisaoMotivo,
+    rescisaoDiasEfetivos,
+    isAdvanced,
+    advancedOptions,
+  ]);
+
+  const inputFingerprint = useMemo(
+    () => JSON.stringify(buildCalculationInput()),
+    [buildCalculationInput],
   );
+
+  const isCalcStale = hasCalculated && lastCalcFingerprint !== inputFingerprint;
+
+  const handleCalculateClick = useCallback(() => {
+    const input = buildCalculationInput();
+    calculate(input);
+    setLastCalcFingerprint(JSON.stringify(input));
+  }, [buildCalculationInput, calculate]);
+
+  const handleAdvancedToggle = useCallback(
+    (open: boolean) => {
+      setCalculatorMode(open ? 'advanced' : 'simple');
+    },
+    [setCalculatorMode],
+  );
+
+  const calculoResultado = useMemo(() => {
+    if (!calcSnapshot) {
+      return calculateToolResult(buildCalculationInput());
+    }
+    return calculateToolResult(calcSnapshot);
+  }, [calcSnapshot, calcVersion, buildCalculationInput]);
 
   // Registros e Totais mapeados de acordo com a ferramenta ativa (Retrocompatibilidade)
   const registros = useMemo(() => {
@@ -445,6 +479,8 @@ export default function CalculatorPage({
   const handleClearData = useCallback(() => {
     setCalculatorMode('simple');
     setAdvancedOptions(emptyAdvancedForTool(activeTool));
+    resetCalculate();
+    setLastCalcFingerprint(null);
 
     switch (activeTool) {
       case 'juros': {
@@ -481,7 +517,7 @@ export default function CalculatorPage({
         break;
       }
     }
-  }, [activeTool, setCalculatorMode]);
+  }, [activeTool, setCalculatorMode, resetCalculate]);
 
   const handleSavePdf = useCallback(async () => {
     const [{ buildCalculatorPdfPayload }, { exportCalculationPdf }] = await Promise.all([
@@ -737,12 +773,12 @@ export default function CalculatorPage({
             </div>
           </header>
 
-          <div className="px-3 pb-5 md:px-5 md:pb-7 lg:px-7 lg:pb-8 pt-4 md:pt-5">
-            <HowToUseButton variant="banner" onClick={() => setHowToUseOpen(true)} />
-            <div className="mt-4">
-            <ToolQuickGuide guide={TOOL_GUIDES[activeTool]} />
+          <div className="px-3 pb-5 md:px-5 md:pb-7 lg:px-7 lg:pb-8 pt-3 md:pt-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+              <HowToUseButton variant="banner" onClick={() => setHowToUseOpen(true)} />
             </div>
-            <div className={`rounded-xl ${ACTIVE_TOOL_SURFACE} border border-slate-200/60 p-4 md:p-6 lg:p-8 mt-4`}>
+            <QuickGuideCollapsible guide={TOOL_GUIDES[activeTool]} />
+            <div className={`rounded-xl ${ACTIVE_TOOL_SURFACE} border border-slate-200/60 p-4 md:p-6 lg:p-8 mt-3`}>
               <p className="sr-only">
                 Área de trabalho da calculadora {activeToolMeta.title}. Inclui campos de entrada, resultados, gráficos e tabelas.
               </p>
@@ -763,46 +799,10 @@ export default function CalculatorPage({
 
               {activeTool === 'juros' && (
                 <>
-                  <div className="flex items-center justify-between border-b border-slate-50 pb-3">
-                    <h2 className="font-bold text-slate-900 text-md flex items-center gap-2">
-                      <Calculator className="w-5 h-5 text-[#800020]" />
-                      Simule seu investimento
-                    </h2>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <span className="text-xs font-semibold text-slate-700 flex items-center">
-                      Periodicidade da taxa
-                      <FieldHint text="Mensal: taxa ao mês e prazo em meses. Anual: taxa ao ano e prazo em anos." />
-                    </span>
-                    <div
-                      className="grid grid-cols-2 gap-1.5 bg-slate-100/70 p-1 rounded-xl"
-                      role="group"
-                      aria-label="Periodicidade da taxa"
-                    >
-                      {(['mensal', 'anual'] as const).map((p) => (
-                        <button
-                          key={p}
-                          type="button"
-                          onClick={() => handlePeriodicidadeJuros(p)}
-                          className={`text-xs py-2.5 font-bold rounded-lg transition-all cursor-pointer min-h-[2.75rem] ${
-                            jurosPeriodicidade === p
-                              ? 'bg-white text-[#800020] shadow-xs'
-                              : 'text-slate-600 hover:text-slate-800'
-                          }`}
-                          aria-pressed={jurosPeriodicidade === p}
-                        >
-                          {periodicidadeLabel(p)}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-[10px] text-slate-500 leading-snug">{periodicidadeResumo(jurosPeriodicidade)}</p>
-                  </div>
-
-                  {/* Campo: Valor Inicial */}
+                  {/* Valor Inicial */}
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="valor-inicial" className="text-xs font-semibold text-slate-700 flex items-center">
-                      Quanto você já tem (R$)
+                      Valor inicial (R$)
                       <FieldHint text="Valor que você já possui guardado hoje, antes dos aportes mensais." />
                     </label>
                     <div className="relative">
@@ -813,7 +813,7 @@ export default function CalculatorPage({
                         inputMode="numeric"
                         value={valorInicialStr}
                         onChange={(e) => setValorInicialStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                        className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                         placeholder="0,00"
                       />
                     </div>
@@ -821,7 +821,7 @@ export default function CalculatorPage({
 
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="aporte-mensal" className="text-xs font-semibold text-slate-700 flex items-center">
-                      Quanto guardar por mês (R$)
+                      Aporte mensal (R$)
                       <FieldHint text="Valor que você pretende investir todo mês." />
                     </label>
                     <div className="relative">
@@ -832,36 +832,20 @@ export default function CalculatorPage({
                         inputMode="numeric"
                         value={aporteMensalStr}
                         onChange={(e) => setAporteMensalStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                        className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                         placeholder="0,00"
                       />
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="tempo-periodo" className="text-xs font-semibold text-slate-700 flex items-center">
-                      {tempoFieldLabel(jurosPeriodicidade)}
-                      <FieldHint text={tempoFieldHint(jurosPeriodicidade)} />
-                    </label>
-                    <input
-                      id="tempo-periodo"
-                      type="number"
-                      min="0"
-                      value={tempo || ''}
-                      onChange={(e) => setTempo(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                      placeholder="0"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
                     <label htmlFor="taxa-rendimento" className="text-xs font-semibold text-slate-700 flex items-center">
-                      {taxaFieldLabel(jurosPeriodicidade)}
-                      <FieldHint text={taxaFieldHint(jurosPeriodicidade)} />
+                      {isAdvanced ? taxaFieldLabel(jurosPeriodicidade) : 'Taxa de juros (% ao ano)'}
+                      <FieldHint text={isAdvanced ? taxaFieldHint(jurosPeriodicidade) : 'Rentabilidade média anual esperada do investimento.'} />
                     </label>
                     <div className="relative">
                       <span className="absolute right-3.5 top-2.5 text-xs text-slate-500 font-bold">
-                        {taxaFieldSuffix(jurosPeriodicidade)}
+                        {isAdvanced ? taxaFieldSuffix(jurosPeriodicidade) : '% ao ano'}
                       </span>
                       <input
                         id="taxa-rendimento"
@@ -870,33 +854,36 @@ export default function CalculatorPage({
                         min="0"
                         value={taxaAnual || ''}
                         onChange={(e) => handleTaxaAnualChange(Math.max(0, parseFloat(e.target.value) || 0))}
-                        className="w-full pl-4 pr-24 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                        className="calc-field-input w-full pl-4 pr-24 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                         placeholder="0"
                       />
                     </div>
-                    <p className="text-[10px] text-slate-500 leading-snug bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 flex items-start gap-1.5">
-                      <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[#800020]" aria-hidden="true" />
-                      <span>
-                        Quer calcular <strong className="font-semibold text-slate-600">juros simples</strong>? Basta não preencher a taxa de juros (deixe em 0%) — o resultado considerará apenas o valor investido, sem capitalização de rendimentos.
-                      </span>
-                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="tempo-periodo" className="text-xs font-semibold text-slate-700 flex items-center">
+                      {isAdvanced ? tempoFieldLabel(jurosPeriodicidade) : 'Prazo (anos)'}
+                      <FieldHint text={isAdvanced ? tempoFieldHint(jurosPeriodicidade) : 'Por quantos anos você vai investir.'} />
+                    </label>
+                    <input
+                      id="tempo-periodo"
+                      type="number"
+                      min="0"
+                      value={tempo || ''}
+                      onChange={(e) => setTempo(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="calc-field-input w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                      placeholder="0"
+                    />
                   </div>
                 </>
               )}
 
               {activeTool === 'clt-pj' && (
                 <>
-                  <div className="flex items-center justify-between border-b border-slate-50 pb-3">
-                    <h2 className="font-bold text-slate-900 text-md flex items-center gap-2">
-                      <Briefcase className="w-5 h-5 text-[#800020]" />
-                      CLT vs PJ
-                    </h2>
-                  </div>
-
-                  {/* Campo: Salário Bruto CLT */}
                   <div className="flex flex-col gap-1.5 shrink-0 select-none">
-                    <label className="text-xs font-semibold text-slate-700 flex justify-between">
-                      <span>Salário Bruto CLT (R$)</span>
+                    <label className="text-xs font-semibold text-slate-700 flex items-center">
+                      Salário bruto CLT (R$)
+                      <FieldHint text="Valor da carteira assinada antes de descontos." />
                     </label>
                     <div className="relative">
                       <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
@@ -905,58 +892,7 @@ export default function CalculatorPage({
                         inputMode="numeric"
                         value={salarioCltStr}
                         onChange={(e) => setSalarioCltStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                        placeholder="0,00"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Campo: Vale Refeição / Alimentação */}
-                  <div className="flex flex-col gap-1.5 select-none">
-                    <label className="text-xs font-semibold text-slate-700">VR/VA Mensal (R$)</label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={cltVrStr}
-                        onChange={(e) => setCltVrStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                        placeholder="0,00"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Campo: Plano de Saúde */}
-                  <div className="flex flex-col gap-1.5 select-none">
-                    <label className="text-xs font-semibold text-slate-700">Plano de Saúde Mensal (R$)</label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={cltSaudeStr}
-                        onChange={(e) => setCltSaudeStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                        placeholder="0,00"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Campo: Outros Benefícios / Transporte */}
-                  <div className="flex flex-col gap-1.5 select-none">
-                    <label className="text-xs font-semibold text-slate-700 flex items-center">
-                      Outros Benefícios Mensal (R$)
-                      <FieldHint text="Valor mensal de transporte, auxílio home office, gympass e demais benefícios fixos pagos pela empresa." />
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={cltOutrosStr}
-                        onChange={(e) => setCltOutrosStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                        className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                         placeholder="0,00"
                       />
                     </div>
@@ -966,39 +902,51 @@ export default function CalculatorPage({
 
               {activeTool === 'aposentadoria' && (
                 <>
-                  <div className="flex items-center justify-between border-b border-slate-50 pb-3">
-                    <h2 className="font-bold text-slate-900 text-md flex items-center gap-2">
-                      <Calendar className="w-5 h-5 text-[#800020]" />
-                      Aposentadoria
-                    </h2>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-slate-700 flex items-center">
+                      Patrimônio atual (R$)
+                      <FieldHint text="Quanto você já possui investido hoje." />
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={aposentadoriaPatrimonioAtualStr}
+                        onChange={(e) => setAposentadoriaPatrimonioAtualStr(formatMilhar(e.target.value))}
+                        className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                        placeholder="0"
+                      />
+                    </div>
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="aposentadoria-idade-atual" className="text-xs font-semibold text-slate-700 flex items-center">
-                      Sua idade hoje
-                      <FieldHint text="Idade atual usada para calcular o tempo até a aposentadoria." />
+                    <label className="text-xs font-semibold text-slate-700 flex items-center">
+                      Aporte mensal (R$)
+                      <FieldHint text="Quanto você guarda ou pretende guardar por mês." />
                     </label>
-                    <input
-                      id="aposentadoria-idade-atual"
-                      type="number"
-                      min="1"
-                      max="120"
-                      value={aposentadoriaIdadeAtual || ''}
-                      onChange={(e) => {
-                        const idade = Math.max(1, Math.min(120, parseInt(e.target.value) || 1));
-                        setAposentadoriaIdadeAtual(idade);
-                        if (aposentadoriaIdadeAlvo <= idade) {
-                          setAposentadoriaIdadeAlvo(Math.min(120, idade + 1));
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={formatMilhar(String(advancedOptions.aposentadoria.aporteMensalAtual))}
+                        onChange={(e) =>
+                          patchAdvancedOptions({
+                            aposentadoria: {
+                              aporteMensalAtual: parseMilhar(e.target.value) || 0,
+                            },
+                          })
                         }
-                      }}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                      placeholder="0"
-                    />
+                        className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                        placeholder="0,00"
+                      />
+                    </div>
                   </div>
 
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="aposentadoria-idade-alvo" className="text-xs font-semibold text-slate-700 flex items-center">
-                      Idade para aposentar
+                      Idade desejada para aposentar
                       <FieldHint text="Com quantos anos você quer parar de trabalhar." />
                     </label>
                     <input
@@ -1011,60 +959,15 @@ export default function CalculatorPage({
                         const minAlvo = Math.max(2, aposentadoriaIdadeAtual + 1);
                         setAposentadoriaIdadeAlvo(Math.max(minAlvo, Math.min(120, parseInt(e.target.value) || minAlvo)));
                       }}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                      className="calc-field-input w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                       placeholder="0"
                     />
-                  </div>
-
-                  {/* Renda Desejada */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700 flex items-center">
-                      Renda mensal desejada (R$)
-                      <FieldHint text="Quanto você quer receber por mês na aposentadoria." />
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={aposentadoriaRendaDesejadaStr}
-                        onChange={(e) => setAposentadoriaRendaDesejadaStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                        placeholder="0,00"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700 flex items-center">
-                      Quanto já guardou (R$)
-                      <FieldHint text="Patrimônio que você já possui investido. Deixe zero se ainda não guardou." />
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={aposentadoriaPatrimonioAtualStr}
-                        onChange={(e) => setAposentadoriaPatrimonioAtualStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                        placeholder="0"
-                      />
-                    </div>
                   </div>
                 </>
               )}
 
               {activeTool === 'rescisao' && (
                 <>
-                  <div className="flex items-center justify-between border-b border-slate-50 pb-3">
-                    <h2 className="font-bold text-slate-900 text-md flex items-center gap-2">
-                      <Scale className="w-5 h-5 text-[#800020]" />
-                      Rescisão CLT
-                    </h2>
-                  </div>
-
-                  {/* Salário */}
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-slate-700 flex items-center">
                       Salário bruto (R$)
@@ -1077,7 +980,7 @@ export default function CalculatorPage({
                         inputMode="numeric"
                         value={rescisaoSalarioStr}
                         onChange={(e) => setRescisaoSalarioStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                        className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                         placeholder="0,00"
                       />
                     </div>
@@ -1093,13 +996,13 @@ export default function CalculatorPage({
                       type="date"
                       value={rescisaoDataAdmissao}
                       onChange={(e) => setRescisaoDataAdmissao(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                      className="calc-field-input w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                     />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="rescisao-desligamento" className="text-xs font-semibold text-slate-700 flex items-center">
-                      Data de desligamento
+                      Data de saída
                       <FieldHint text="Último dia trabalhado ou data da rescisão." />
                     </label>
                     <input
@@ -1107,51 +1010,187 @@ export default function CalculatorPage({
                       type="date"
                       value={rescisaoDataDesligamento}
                       onChange={(e) => setRescisaoDataDesligamento(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                      className="calc-field-input w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                     />
-                  </div>
-
-                  {!isAdvanced && (
-                    <p className="text-[10px] text-slate-500 bg-slate-50 rounded-lg px-2.5 py-2">
-                      Tempo calculado: {rescisaoMesesEfetivos} meses · {rescisaoDiasEfetivos} dias no último mês
-                    </p>
-                  )}
-
-                  {/* Motivo do Desligamento */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700 flex items-center">
-                      Tipo de rescisão
-                      <FieldHint text="O motivo do desligamento muda o valor do FGTS e das multas." />
-                    </label>
-                    <select
-                      value={rescisaoMotivo}
-                      onChange={(e) => setRescisaoMotivo(e.target.value as RescisaoMotivo)}
-                      className="w-full py-2.5 px-3.5 bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold rounded-xl focus:outline-hidden focus:border-[#800020] cursor-pointer min-h-[2.75rem]"
-                    >
-                      <option value="sem_justa">Sem justa causa (empresa)</option>
-                      <option value="pedido_demissao">Pedido de demissão</option>
-                      <option value="com_justa">Com justa causa</option>
-                      <option value="acordo">Acordo trabalhista</option>
-                    </select>
                   </div>
                 </>
               )}
 
-              <PersonalizeTrigger
-                isAdvanced={isAdvanced}
-                onOpen={() => setCalculatorMode('advanced')}
-                onClose={() => setCalculatorMode('simple')}
-                openLabel={activeTool === 'aposentadoria' ? 'Modo completo' : undefined}
-                closeLabel={activeTool === 'aposentadoria' ? '← Voltar ao modo simples' : undefined}
+              <CalculateButton
+                onClick={handleCalculateClick}
+                isRecalculate={hasCalculated}
+                isStale={isCalcStale}
               />
 
-              {isAdvanced && (
+              <CollapsibleAdvancedPanel
+                isOpen={isAdvanced}
+                onToggle={handleAdvancedToggle}
+                label={activeTool === 'aposentadoria' ? 'Opções avançadas' : 'Personalizar Simulação'}
+              >
+                {activeTool === 'juros' && (
+                  <>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-xs font-semibold text-slate-700 flex items-center">
+                        Periodicidade da taxa
+                        <FieldHint text="Mensal: taxa ao mês e prazo em meses. Anual: taxa ao ano e prazo em anos." />
+                      </span>
+                      <div
+                        className="grid grid-cols-2 gap-1.5 bg-slate-100/70 p-1 rounded-xl"
+                        role="group"
+                        aria-label="Periodicidade da taxa"
+                      >
+                        {(['mensal', 'anual'] as const).map((p) => (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => handlePeriodicidadeJuros(p)}
+                            className={`text-xs py-2.5 font-bold rounded-lg transition-all cursor-pointer min-h-[2.75rem] ${
+                              jurosPeriodicidade === p
+                                ? 'bg-white text-[#800020] shadow-xs'
+                                : 'text-slate-600 hover:text-slate-800'
+                            }`}
+                            aria-pressed={jurosPeriodicidade === p}
+                          >
+                            {periodicidadeLabel(p)}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-slate-500 leading-snug">{periodicidadeResumo(jurosPeriodicidade)}</p>
+                    </div>
+                    <p className="text-[10px] text-slate-500 leading-snug bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 flex items-start gap-1.5">
+                      <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[#800020]" aria-hidden="true" />
+                      <span>
+                        Quer calcular <strong className="font-semibold text-slate-600">juros simples</strong>? Deixe a taxa em 0% — o resultado considerará apenas o valor investido, sem capitalização.
+                      </span>
+                    </p>
+                  </>
+                )}
+
+                {activeTool === 'clt-pj' && (
+                  <>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-slate-700">VR/VA mensal (R$)</label>
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={cltVrStr}
+                          onChange={(e) => setCltVrStr(formatMilhar(e.target.value))}
+                          className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                          placeholder="0,00"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-slate-700">Plano de saúde mensal (R$)</label>
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={cltSaudeStr}
+                          onChange={(e) => setCltSaudeStr(formatMilhar(e.target.value))}
+                          className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                          placeholder="0,00"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-slate-700 flex items-center">
+                        Outros benefícios mensais (R$)
+                        <FieldHint text="Transporte, gympass, auxílio home office e demais benefícios fixos." />
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={cltOutrosStr}
+                          onChange={(e) => setCltOutrosStr(formatMilhar(e.target.value))}
+                          className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                          placeholder="0,00"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {activeTool === 'aposentadoria' && (
+                  <>
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="aposentadoria-idade-atual" className="text-xs font-semibold text-slate-700 flex items-center">
+                        Sua idade hoje
+                        <FieldHint text="Idade atual usada para calcular o tempo até a aposentadoria." />
+                      </label>
+                      <input
+                        id="aposentadoria-idade-atual"
+                        type="number"
+                        min="1"
+                        max="120"
+                        value={aposentadoriaIdadeAtual || ''}
+                        onChange={(e) => {
+                          const idade = Math.max(1, Math.min(120, parseInt(e.target.value) || 1));
+                          setAposentadoriaIdadeAtual(idade);
+                          if (aposentadoriaIdadeAlvo <= idade) {
+                            setAposentadoriaIdadeAlvo(Math.min(120, idade + 1));
+                          }
+                        }}
+                        className="calc-field-input w-full px-3.5 py-2.5 bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-slate-700 flex items-center">
+                        Renda mensal desejada (R$)
+                        <FieldHint text="Quanto você quer receber por mês na aposentadoria." />
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={aposentadoriaRendaDesejadaStr}
+                          onChange={(e) => setAposentadoriaRendaDesejadaStr(formatMilhar(e.target.value))}
+                          className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                          placeholder="0,00"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {activeTool === 'rescisao' && (
+                  <>
+                    <p className="text-[10px] text-slate-500 bg-slate-50 rounded-lg px-2.5 py-2">
+                      Tempo calculado: {rescisaoMesesEfetivos} meses · {rescisaoDiasEfetivos} dias no último mês
+                    </p>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-slate-700 flex items-center">
+                        Tipo de rescisão
+                        <FieldHint text="O motivo do desligamento muda o valor do FGTS e das multas." />
+                      </label>
+                      <select
+                        value={rescisaoMotivo}
+                        onChange={(e) => setRescisaoMotivo(e.target.value as RescisaoMotivo)}
+                        className="calc-field-input w-full py-2.5 px-3.5 bg-white border border-slate-200 text-slate-800 text-xs font-bold rounded-xl focus:outline-hidden focus:border-[#800020] cursor-pointer min-h-[2.75rem]"
+                      >
+                        <option value="sem_justa">Sem justa causa (empresa)</option>
+                        <option value="pedido_demissao">Pedido de demissão</option>
+                        <option value="com_justa">Com justa causa</option>
+                        <option value="acordo">Acordo trabalhista</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+
                 <CalculatorAdvancedFields
                   activeTool={activeTool}
                   advanced={advancedOptions}
                   onChange={patchAdvancedOptions}
                   aposentadoriaSalarioAtualNum={aposentadoriaSalarioAtualNum}
                   defaultOpen
+                  sectionId="personalizar-calculo-inner"
                   jurosUi={
                     activeTool === 'juros'
                       ? {
@@ -1174,7 +1213,7 @@ export default function CalculatorPage({
                       : undefined
                   }
                 />
-              )}
+              </CollapsibleAdvancedPanel>
 
               <CalculatorActionBar onClear={handleClearData} onSavePdf={handleSavePdf} />
 
@@ -1182,7 +1221,15 @@ export default function CalculatorPage({
 
           {/* LADO DIREITO (Width: 3/4) */}
           <div className="order-2 lg:order-2 lg:col-span-3 lg:col-start-2 lg:row-start-1 calc-panel-results flex flex-col gap-6 sm:gap-8">
-            
+            {!hasCalculated ? (
+              <ResultsPlaceholder />
+            ) : (
+            <>
+            {isCalcStale && (
+              <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 font-medium">
+                Você alterou os dados — clique em Recalcular para atualizar o resultado.
+              </p>
+            )}
             {activeTool === 'juros' && (
               <p className="calc-periodicity-badge w-fit" aria-live="polite">
                 <Percent className="w-3.5 h-3.5 text-[#800020]" aria-hidden="true" />
@@ -1721,6 +1768,9 @@ export default function CalculatorPage({
                   </ul>
                 </div>
               </>
+            )}
+
+            </>
             )}
 
           </div>

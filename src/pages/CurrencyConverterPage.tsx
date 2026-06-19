@@ -1,4 +1,4 @@
-import { useState, useMemo, lazy, Suspense, useCallback } from 'react';
+import { useState, useMemo, lazy, Suspense, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Coins,
@@ -32,12 +32,13 @@ import { formatConvertedValue, formatExchangeTimestamp, formatRateBRL } from '..
 import { conversorMoedasContent } from '../content/tools/conversor-moedas';
 import { ROUTES } from '../constants/routes';
 import { SITE_URL } from '../constants/site';
-import ToolQuickGuide from '../components/calculator/ToolQuickGuide';
-import PersonalizeTrigger from '../components/calculator/PersonalizeTrigger';
+import QuickGuideCollapsible from '../components/calculator/QuickGuideCollapsible';
+import CollapsibleAdvancedPanel from '../components/calculator/CollapsibleAdvancedPanel';
+import CalculateButton from '../components/calculator/CalculateButton';
+import ResultsPlaceholder from '../components/calculator/ResultsPlaceholder';
 import HowToUseButton from '../components/calculator/HowToUseButton';
 import HowToUseModal from '../components/calculator/HowToUseModal';
 import CalculatorActionBar from '../components/calculator/CalculatorActionBar';
-import AdvancedSection from '../components/calculator/AdvancedSection';
 import MethodologyPanel from '../components/calculator/MethodologyPanel';
 import { useCalculatorMode } from '../hooks/useCalculatorMode';
 import { CONVERSOR_GUIDE } from '../config/toolGuides';
@@ -86,6 +87,9 @@ export default function CurrencyConverterPage() {
   const [quoteType, setQuoteType] = useState<QuoteType>('comercial');
   const [howToUseOpen, setHowToUseOpen] = useState(false);
   const { setMode: setCalculatorMode, isAdvanced } = useCalculatorMode('conversor');
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [displayResult, setDisplayResult] = useState(0);
+  const [isCalcStale, setIsCalcStale] = useState(false);
 
   const chartCode = from === 'BRL' ? to : from;
   const chartRate = rates[chartCode] ?? 0;
@@ -145,7 +149,21 @@ export default function CurrencyConverterPage() {
     setFrom(DEFAULT_FROM);
     setTo(DEFAULT_TO);
     setQuoteType('comercial');
+    setHasCalculated(false);
+    setDisplayResult(0);
+    setIsCalcStale(false);
   }, [setCalculatorMode]);
+
+  const handleCalculateClick = useCallback(() => {
+    setDisplayResult(converterMatrizMoedas(value, from, to, effectiveRates));
+    setHasCalculated(true);
+    setIsCalcStale(false);
+  }, [value, from, to, effectiveRates]);
+
+  useEffect(() => {
+    if (!hasCalculated) return;
+    setIsCalcStale(true);
+  }, [value, from, to, quoteType, isAdvanced]);
 
   const handleSavePdf = useCallback(async () => {
     const [{ buildConversorPdfPayload }, { exportCalculationPdf }] = await Promise.all([
@@ -218,7 +236,7 @@ export default function CurrencyConverterPage() {
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900">{content.h1}</h1>
           <p className="text-sm text-slate-600 max-w-2xl leading-relaxed">{content.intro}</p>
-          <ToolQuickGuide guide={CONVERSOR_GUIDE} />
+          <QuickGuideCollapsible guide={CONVERSOR_GUIDE} />
         </header>
 
         {/* Cotações do dia */}
@@ -295,28 +313,6 @@ export default function CurrencyConverterPage() {
 
           <div className="p-4 md:p-6 lg:p-8 pt-4 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
             <div className="flex flex-col gap-4 order-1 lg:order-1 calc-panel-form">
-              <PersonalizeTrigger
-                isAdvanced={isAdvanced}
-                onOpen={() => setCalculatorMode('advanced')}
-                onClose={() => setCalculatorMode('simple')}
-              />
-              {isAdvanced && (
-                <AdvancedSection defaultOpen id="personalizar-calculo">
-                  <label className="text-[11px] font-semibold text-slate-700">Tipo de cotação</label>
-                  <select
-                    value={quoteType}
-                    onChange={(e) => setQuoteType(e.target.value as QuoteType)}
-                    className="w-full px-3 py-2.5 bg-white border border-slate-200 text-slate-900 text-xs font-semibold rounded-xl focus:outline-hidden focus:border-amber-500 min-h-[2.75rem]"
-                  >
-                    {QUOTE_TYPES.map((qt) => (
-                      <option key={qt.id} value={qt.id}>
-                        {qt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-[10px] text-slate-500">{QUOTE_TYPES.find((q) => q.id === quoteType)?.hint}</p>
-                </AdvancedSection>
-              )}
               <CurrencyConverterPanel
               value={value}
               onValueChange={setValue}
@@ -325,13 +321,50 @@ export default function CurrencyConverterPage() {
               onFromChange={setFrom}
               onToChange={setTo}
               onSwap={swap}
-              result={result}
+              result={displayResult}
+              showResult={hasCalculated}
               currencies={currencyOptions}
             />
+              <CalculateButton
+                onClick={handleCalculateClick}
+                isRecalculate={hasCalculated}
+                isStale={isCalcStale}
+              />
+              <CollapsibleAdvancedPanel
+                isOpen={isAdvanced}
+                onToggle={(open) => setCalculatorMode(open ? 'advanced' : 'simple')}
+                label="Personalizar Simulação"
+              >
+                <label className="text-[11px] font-semibold text-slate-700">Tipo de cotação</label>
+                <select
+                  value={quoteType}
+                  onChange={(e) => setQuoteType(e.target.value as QuoteType)}
+                  className="w-full px-3 py-2.5 bg-white border border-slate-200 text-slate-900 text-xs font-semibold rounded-xl focus:outline-hidden focus:border-amber-500 min-h-[2.75rem]"
+                >
+                  {QUOTE_TYPES.map((qt) => (
+                    <option key={qt.id} value={qt.id}>
+                      {qt.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-slate-500">{QUOTE_TYPES.find((q) => q.id === quoteType)?.hint}</p>
+              </CollapsibleAdvancedPanel>
               <CalculatorActionBar onClear={handleClearData} onSavePdf={handleSavePdf} />
             </div>
 
             <div className="flex flex-col gap-6 order-2 lg:order-2 calc-panel-results">
+              {!hasCalculated ? (
+                <ResultsPlaceholder
+                  title="Conversão pronta para calcular"
+                  description="Informe valor, moeda de origem e destino. Clique em Calcular para ver o resultado e explorar conversões rápidas."
+                />
+              ) : (
+              <>
+              {isCalcStale && (
+                <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 font-medium">
+                  Dados alterados — clique em Recalcular para atualizar.
+                </p>
+              )}
               {/* Conversões rápidas */}
               <section aria-labelledby="quick-convert-heading">
                 <h3 id="quick-convert-heading" className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">
@@ -384,6 +417,8 @@ export default function CurrencyConverterPage() {
                   ))}
                 </div>
               </section>
+              </>
+              )}
             </div>
           </div>
         </div>
