@@ -61,6 +61,8 @@ import {
   taxaFieldSuffix,
   tempoFieldHint,
   tempoFieldLabel,
+  tempoFieldSuffix,
+  prazoInvestimentoLabel,
   tempoUnidadeForPeriodicidade,
   type JurosPeriodicidade,
 } from '../utils/jurosPeriodicity';
@@ -882,6 +884,35 @@ export default function CalculatorPage({
                         </button>
                       ))}
                     </div>
+                    <p className="text-[10px] text-slate-500 leading-snug">{periodicidadeResumo(jurosPeriodicidade)}</p>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-semibold text-slate-700 flex items-center">
+                      Prazo do investimento
+                      <FieldHint text="Meses: informe a duração em meses. Anos: informe a duração em anos." />
+                    </span>
+                    <div
+                      className="grid grid-cols-2 gap-1.5 bg-slate-100/70 p-1 rounded-xl"
+                      role="group"
+                      aria-label="Unidade do prazo do investimento"
+                    >
+                      {(['mensal', 'anual'] as const).map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => handlePeriodicidadeJuros(p)}
+                          className={`text-xs py-2.5 font-bold rounded-lg transition-all cursor-pointer min-h-[2.75rem] ${
+                            jurosPeriodicidade === p
+                              ? 'bg-white text-[#800020] shadow-xs'
+                              : 'text-slate-600 hover:text-slate-800'
+                          }`}
+                          aria-pressed={jurosPeriodicidade === p}
+                        >
+                          {prazoInvestimentoLabel(p)}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="flex flex-col gap-1.5">
@@ -911,15 +942,20 @@ export default function CalculatorPage({
                       {tempoFieldLabel(jurosPeriodicidade)}
                       <FieldHint text={tempoFieldHint(jurosPeriodicidade)} />
                     </label>
-                    <input
-                      id="tempo-periodo"
-                      type="number"
-                      min="0"
-                      value={tempo || ''}
-                      onChange={(e) => setTempo(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="calc-field-input w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                      placeholder="0"
-                    />
+                    <div className="relative">
+                      <span className="absolute right-3.5 top-2.5 text-xs text-slate-500 font-bold">
+                        {tempoFieldSuffix(jurosPeriodicidade)}
+                      </span>
+                      <input
+                        id="tempo-periodo"
+                        type="number"
+                        min="0"
+                        value={tempo || ''}
+                        onChange={(e) => setTempo(Math.max(0, parseInt(e.target.value) || 0))}
+                        className="calc-field-input w-full pl-4 pr-20 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                        placeholder="0"
+                      />
+                    </div>
                   </div>
                 </>
               )}
@@ -984,6 +1020,24 @@ export default function CalculatorPage({
                             },
                           })
                         }
+                        className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                        placeholder="0,00"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-slate-700 flex items-center">
+                      Renda mensal desejada (R$)
+                      <FieldHint text="Quanto você quer receber por mês na aposentadoria." />
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={aposentadoriaRendaDesejadaStr}
+                        onChange={(e) => setAposentadoriaRendaDesejadaStr(formatMilhar(e.target.value))}
                         className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                         placeholder="0,00"
                       />
@@ -1180,26 +1234,6 @@ export default function CalculatorPage({
                       </div>
                     </div>
                   </>
-                )}
-
-                {activeTool === 'aposentadoria' && (
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700 flex items-center">
-                      Renda mensal desejada (R$)
-                      <FieldHint text="Quanto você quer receber por mês na aposentadoria." />
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={aposentadoriaRendaDesejadaStr}
-                        onChange={(e) => setAposentadoriaRendaDesejadaStr(formatMilhar(e.target.value))}
-                        className="calc-field-input w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
-                        placeholder="0,00"
-                      />
-                    </div>
-                  </div>
                 )}
 
                 {activeTool === 'rescisao' && (
@@ -1812,6 +1846,34 @@ export default function CalculatorPage({
               </>
             )}
 
+            {activeTool === 'juros' && (
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-xs font-sans">
+                <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                  <Info className="w-4 h-4 text-[#800020]" aria-hidden="true" />
+                  Parecer do Especialista Financeiro
+                </h4>
+                <p className="text-[11px] text-slate-600 leading-relaxed mt-2 font-sans">
+                  Simulação educativa com capitalização composta. Rentabilidade passada não garante resultados futuros; inflação, tributos e taxas de administração podem alterar o patrimônio líquido real.
+                </p>
+              </div>
+            )}
+
+            {activeTool === 'aposentadoria' && aposentadoriaData && (
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-xs font-sans">
+                <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                  <Info className="w-4 h-4 text-[#800020]" aria-hidden="true" />
+                  Orientações do Especialista
+                </h4>
+                <p className="text-[11px] text-slate-600 leading-relaxed mt-2 font-sans">
+                  A meta patrimonial considera renda desejada, cobertura previdenciária estimada e regra de saque conservadora. Revise o plano periodicamente conforme mudanças de renda, inflação e objetivos de vida.
+                </p>
+              </div>
+            )}
+
+            <Suspense fallback={null}>
+              <MethodologyPanel toolId={activeTool} liveParams={methodologyLiveParams} />
+            </Suspense>
+
             </>
             )}
 
@@ -1821,12 +1883,6 @@ export default function CalculatorPage({
             </div>
           </div>
         </div>
-        </div>
-
-        <div className="mt-8 px-3 md:px-5 lg:px-7">
-          <Suspense fallback={null}>
-            <MethodologyPanel toolId={activeTool} liveParams={methodologyLiveParams} />
-          </Suspense>
         </div>
 
         <Suspense fallback={null}>

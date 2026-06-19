@@ -6,6 +6,7 @@ import {
   TrendingDown,
   RefreshCw,
   ArrowRight,
+  Info,
 } from 'lucide-react';
 import SkipLink from '../components/layout/SkipLink';
 import SiteBrand from '../components/layout/SiteBrand';
@@ -417,6 +418,24 @@ export default function CurrencyConverterPage() {
                   ))}
                 </div>
               </section>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-xs font-sans">
+                <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                  <Info className="w-4 h-4 text-[#800020]" aria-hidden="true" />
+                  Orientações do Especialista
+                </h4>
+                <p className="text-[11px] text-slate-600 leading-relaxed mt-2 font-sans">
+                  As cotações exibidas são indicativas e podem diferir do valor praticado por bancos, casas de câmbio e cartões, conforme IOF, spread e tipo de operação escolhido.
+                </p>
+              </div>
+
+              <MethodologyPanel
+                toolId="conversor"
+                liveParams={[
+                  { label: 'Par de moedas', value: `${from} → ${to}` },
+                  { label: 'Cotação', value: isAdvanced ? quoteType : 'comercial' },
+                ]}
+              />
               </>
               )}
             </div>
@@ -526,14 +545,6 @@ export default function CurrencyConverterPage() {
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </Link>
         </aside>
-
-        <MethodologyPanel
-          toolId="conversor"
-          liveParams={[
-            { label: 'Par de moedas', value: `${from} → ${to}` },
-            { label: 'Cotação', value: isAdvanced ? quoteType : 'comercial' },
-          ]}
-        />
 
         <Suspense fallback={null}>
           <ToolSeoContent content={content} />

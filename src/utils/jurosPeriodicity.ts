@@ -46,6 +46,10 @@ export function tempoFieldHint(p: JurosPeriodicidade): string {
     : 'Número de anos que você vai guardar dinheiro.';
 }
 
-export function tempoPlaceholder(p: JurosPeriodicidade): string {
-  return '0';
+export function tempoFieldSuffix(p: JurosPeriodicidade): string {
+  return p === 'mensal' ? 'meses' : 'anos';
+}
+
+export function prazoInvestimentoLabel(p: JurosPeriodicidade): string {
+  return p === 'mensal' ? 'Meses' : 'Anos';
 }
