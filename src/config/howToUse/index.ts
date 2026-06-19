@@ -46,7 +46,7 @@ export const HOW_TO_USE: Record<ActiveTool, HowToUseContent> = {
       {
         nome: 'Ganho anual esperado (%)',
         descricao: 'Rentabilidade média anual que você espera do investimento.',
-        dica: 'Ex.: poupança ~8%, CDI ~14%, ou um valor personalizado.',
+        dica: 'Ex.: poupança ~8%, CDI ~14%, ou um valor personalizado. Deixe em 0% para simular juros simples (sem rendimento sobre o capital).',
         modo: 'simples',
       },
       {
@@ -88,13 +88,13 @@ export const HOW_TO_USE: Record<ActiveTool, HowToUseContent> = {
         modo: 'simples',
       },
       {
-        nome: 'Plano de saúde (R$)',
-        descricao: 'Custo do plano pago pelo empregador (ou equivalente).',
+        nome: 'Plano de saúde mensal (R$)',
+        descricao: 'Custo mensal do plano pago pelo empregador (ou equivalente).',
         modo: 'simples',
       },
       {
-        nome: 'Outros benefícios (R$)',
-        descricao: 'Transporte, gympass, bônus fixos mensais, etc.',
+        nome: 'Outros benefícios mensais (R$)',
+        descricao: 'Transporte, gympass, auxílio home office e bônus fixos pagos todo mês.',
         modo: 'simples',
       },
       {

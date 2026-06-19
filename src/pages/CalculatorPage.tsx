@@ -817,19 +817,6 @@ export default function CalculatorPage({
                         placeholder="0,00"
                       />
                     </div>
-                    {isAdvanced && (
-                      <input
-                        id="valor-inicial-range"
-                        type="range"
-                        min="0"
-                        max={Math.max(500000, valorInicialNum || 0)}
-                        step="5000"
-                        value={valorInicialNum}
-                        onChange={(e) => setValorInicialStr(formatMilhar(e.target.value))}
-                        aria-label="Ajustar valor inicial"
-                        className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#800020] mt-1"
-                      />
-                    )}
                   </div>
 
                   <div className="flex flex-col gap-1.5">
@@ -849,19 +836,6 @@ export default function CalculatorPage({
                         placeholder="0,00"
                       />
                     </div>
-                    {isAdvanced && (
-                      <input
-                        id="aporte-mensal-range"
-                        type="range"
-                        min="0"
-                        max={Math.max(20000, aporteMensalNum || 0)}
-                        step="100"
-                        value={aporteMensalNum}
-                        onChange={(e) => setAporteMensalStr(formatMilhar(e.target.value))}
-                        aria-label="Ajustar aporte mensal"
-                        className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#800020] mt-1"
-                      />
-                    )}
                   </div>
 
                   <div className="flex flex-col gap-1.5">
@@ -900,6 +874,12 @@ export default function CalculatorPage({
                         placeholder="0"
                       />
                     </div>
+                    <p className="text-[10px] text-slate-500 leading-snug bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 flex items-start gap-1.5">
+                      <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[#800020]" aria-hidden="true" />
+                      <span>
+                        Quer calcular <strong className="font-semibold text-slate-600">juros simples</strong>? Basta não preencher a taxa de juros (deixe em 0%) — o resultado considerará apenas o valor investido, sem capitalização de rendimentos.
+                      </span>
+                    </p>
                   </div>
                 </>
               )}
@@ -925,7 +905,7 @@ export default function CalculatorPage({
                         inputMode="numeric"
                         value={salarioCltStr}
                         onChange={(e) => setSalarioCltStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
+                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                         placeholder="0,00"
                       />
                     </div>
@@ -941,7 +921,7 @@ export default function CalculatorPage({
                         inputMode="numeric"
                         value={cltVrStr}
                         onChange={(e) => setCltVrStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
+                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                         placeholder="0,00"
                       />
                     </div>
@@ -949,7 +929,7 @@ export default function CalculatorPage({
 
                   {/* Campo: Plano de Saúde */}
                   <div className="flex flex-col gap-1.5 select-none">
-                    <label className="text-xs font-semibold text-slate-700">Plano de Saúde (R$)</label>
+                    <label className="text-xs font-semibold text-slate-700">Plano de Saúde Mensal (R$)</label>
                     <div className="relative">
                       <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
                       <input
@@ -957,7 +937,7 @@ export default function CalculatorPage({
                         inputMode="numeric"
                         value={cltSaudeStr}
                         onChange={(e) => setCltSaudeStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
+                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                         placeholder="0,00"
                       />
                     </div>
@@ -965,7 +945,10 @@ export default function CalculatorPage({
 
                   {/* Campo: Outros Benefícios / Transporte */}
                   <div className="flex flex-col gap-1.5 select-none">
-                    <label className="text-xs font-semibold text-slate-700">Outros Benefícios (R$)</label>
+                    <label className="text-xs font-semibold text-slate-700 flex items-center">
+                      Outros Benefícios Mensal (R$)
+                      <FieldHint text="Valor mensal de transporte, auxílio home office, gympass e demais benefícios fixos pagos pela empresa." />
+                    </label>
                     <div className="relative">
                       <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">R$</span>
                       <input
@@ -973,7 +956,7 @@ export default function CalculatorPage({
                         inputMode="numeric"
                         value={cltOutrosStr}
                         onChange={(e) => setCltOutrosStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
+                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                         placeholder="0,00"
                       />
                     </div>
@@ -991,40 +974,45 @@ export default function CalculatorPage({
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="aposentadoria-idade-atual" className="flex justify-between text-xs font-semibold text-slate-700">
-                      <span className="flex items-center">Sua idade hoje</span>
-                      <span className="text-[#800020] font-bold">{aposentadoriaIdadeAtual} anos</span>
+                    <label htmlFor="aposentadoria-idade-atual" className="text-xs font-semibold text-slate-700 flex items-center">
+                      Sua idade hoje
+                      <FieldHint text="Idade atual usada para calcular o tempo até a aposentadoria." />
                     </label>
                     <input
                       id="aposentadoria-idade-atual"
-                      type="range"
+                      type="number"
                       min="1"
                       max="120"
-                      value={aposentadoriaIdadeAtual}
-                      onChange={(e) => setAposentadoriaIdadeAtual(parseInt(e.target.value))}
-                      aria-label="Idade atual"
-                      className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#800020]"
+                      value={aposentadoriaIdadeAtual || ''}
+                      onChange={(e) => {
+                        const idade = Math.max(1, Math.min(120, parseInt(e.target.value) || 1));
+                        setAposentadoriaIdadeAtual(idade);
+                        if (aposentadoriaIdadeAlvo <= idade) {
+                          setAposentadoriaIdadeAlvo(Math.min(120, idade + 1));
+                        }
+                      }}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                      placeholder="0"
                     />
                   </div>
 
-                  {/* Idade Alvo */}
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="aposentadoria-idade-alvo" className="flex justify-between text-xs font-semibold text-slate-700">
-                      <span className="flex items-center">
-                        Idade para aposentar
-                        <FieldHint text="Com quantos anos você quer parar de trabalhar." />
-                      </span>
-                      <span className="text-[#800020] font-bold">{aposentadoriaIdadeAlvo} anos</span>
+                    <label htmlFor="aposentadoria-idade-alvo" className="text-xs font-semibold text-slate-700 flex items-center">
+                      Idade para aposentar
+                      <FieldHint text="Com quantos anos você quer parar de trabalhar." />
                     </label>
                     <input
                       id="aposentadoria-idade-alvo"
-                      type="range"
+                      type="number"
                       min={Math.max(2, aposentadoriaIdadeAtual + 1)}
                       max="120"
-                      value={aposentadoriaIdadeAlvo}
-                      onChange={(e) => setAposentadoriaIdadeAlvo(parseInt(e.target.value))}
-                      aria-label="Idade alvo para aposentadoria"
-                      className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#800020]"
+                      value={aposentadoriaIdadeAlvo || ''}
+                      onChange={(e) => {
+                        const minAlvo = Math.max(2, aposentadoriaIdadeAtual + 1);
+                        setAposentadoriaIdadeAlvo(Math.max(minAlvo, Math.min(120, parseInt(e.target.value) || minAlvo)));
+                      }}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
+                      placeholder="0"
                     />
                   </div>
 
@@ -1041,7 +1029,7 @@ export default function CalculatorPage({
                         inputMode="numeric"
                         value={aposentadoriaRendaDesejadaStr}
                         onChange={(e) => setAposentadoriaRendaDesejadaStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
+                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                         placeholder="0,00"
                       />
                     </div>
@@ -1059,7 +1047,7 @@ export default function CalculatorPage({
                         inputMode="numeric"
                         value={aposentadoriaPatrimonioAtualStr}
                         onChange={(e) => setAposentadoriaPatrimonioAtualStr(formatMilhar(e.target.value))}
-                        className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all"
+                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-sm font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]"
                         placeholder="0"
                       />
                     </div>
@@ -1138,7 +1126,7 @@ export default function CalculatorPage({
                     <select
                       value={rescisaoMotivo}
                       onChange={(e) => setRescisaoMotivo(e.target.value as RescisaoMotivo)}
-                      className="w-full py-2 px-3 bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold rounded-xl focus:outline-hidden focus:border-[#800020] cursor-pointer"
+                      className="w-full py-2.5 px-3.5 bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold rounded-xl focus:outline-hidden focus:border-[#800020] cursor-pointer min-h-[2.75rem]"
                     >
                       <option value="sem_justa">Sem justa causa (empresa)</option>
                       <option value="pedido_demissao">Pedido de demissão</option>

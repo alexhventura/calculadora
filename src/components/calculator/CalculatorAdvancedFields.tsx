@@ -20,8 +20,19 @@ import AdvancedSection from './AdvancedSection';
 import FieldHint from './FieldHint';
 
 const inputClass =
-  'w-full px-3 py-2 bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-xs font-semibold rounded-xl focus:outline-hidden transition-all';
-const labelClass = 'text-[11px] font-semibold text-slate-700 flex items-center';
+  'w-full min-w-0 px-3 py-2.5 bg-white border border-slate-200 focus:border-[#800020] text-slate-900 text-xs font-semibold rounded-xl focus:outline-hidden transition-all min-h-[2.75rem]';
+const labelClass = 'text-[11px] font-semibold text-slate-700 flex items-center leading-snug';
+
+function FieldLabelStacked({ children, hint }: { children: React.ReactNode; hint?: string }) {
+  return (
+    <span className="calc-advanced-fee-label">
+      <span className="flex items-center">
+        {children}
+        {hint ? <FieldHint text={hint} /> : null}
+      </span>
+    </span>
+  );
+}
 
 interface JurosAdvancedUiProps {
   taxaPeriodo: 'anual' | 'mensal';
@@ -84,13 +95,13 @@ export default function CalculatorAdvancedFields({
       <AdvancedSection defaultOpen={defaultOpen} id={sectionId}>
         <div className="flex flex-col gap-1">
           <FieldLabel hint="Escolha se a taxa é ao ano ou ao mês.">Taxa ao ano ou ao mês</FieldLabel>
-          <div className="grid grid-cols-2 gap-1 bg-slate-100/70 p-1 rounded-xl">
+          <div className="grid grid-cols-2 gap-1.5 bg-slate-100/70 p-1 rounded-xl">
             {(['anual', 'mensal'] as const).map((p) => (
               <button
                 key={p}
                 type="button"
                 onClick={() => jurosUi.onTaxaPeriodoChange(p)}
-                className={`text-[10px] py-1.5 font-bold rounded-lg transition-all cursor-pointer ${
+                className={`text-[10px] py-2.5 font-bold rounded-lg transition-all cursor-pointer min-h-[2.75rem] ${
                   taxaPeriodo === p ? 'bg-white text-[#800020] shadow-xs' : 'text-slate-600'
                 }`}
               >
@@ -114,7 +125,7 @@ export default function CalculatorAdvancedFields({
                 key={tipo}
                 type="button"
                 onClick={() => jurosUi.onTaxaTipoChange(tipo)}
-                className={`text-[10px] font-bold py-2 rounded-lg border transition-all cursor-pointer ${
+                className={`text-[10px] font-bold py-2.5 rounded-lg border transition-all cursor-pointer min-h-[2.75rem] ${
                   taxaTipo === tipo
                     ? 'border-[#800020] bg-rose-50 text-[#800020]'
                     : 'border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -203,9 +214,9 @@ export default function CalculatorAdvancedFields({
             />
           </div>
         )}
-        <div className="grid grid-cols-3 gap-2">
-          <div className="flex flex-col gap-1">
-            <FieldLabel>Admin. (% a.a.)</FieldLabel>
+        <div className="calc-advanced-fee-grid">
+          <div className="calc-advanced-fee-field">
+            <FieldLabelStacked>Administração (% a.a.)</FieldLabelStacked>
             <input
               type="number"
               step="0.01"
@@ -215,8 +226,8 @@ export default function CalculatorAdvancedFields({
               className={inputClass}
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <FieldLabel>Performance (%)</FieldLabel>
+          <div className="calc-advanced-fee-field">
+            <FieldLabelStacked>Performance (% a.a.)</FieldLabelStacked>
             <input
               type="number"
               step="0.01"
@@ -226,8 +237,8 @@ export default function CalculatorAdvancedFields({
               className={inputClass}
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <FieldLabel>Custódia (%)</FieldLabel>
+          <div className="calc-advanced-fee-field">
+            <FieldLabelStacked>Custódia (% a.a.)</FieldLabelStacked>
             <input
               type="number"
               step="0.01"
@@ -450,7 +461,7 @@ export default function CalculatorAdvancedFields({
           Informar meses e dias manualmente
         </label>
         {r.usarPeriodoManual && (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
               <FieldLabel>Meses trabalhados</FieldLabel>
               <input

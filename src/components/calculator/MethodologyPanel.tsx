@@ -25,6 +25,7 @@ export const METHODOLOGY: Record<string, MethodologyContent> = {
     ],
     premises: [
       'Capitalização composta mensal com aportes no fim de cada período.',
+      'Taxa em branco (0%): simulação sem rendimento — equivalente a juros simples, sem acréscimo sobre o capital.',
       'Poupança: 0,5% a.m. + TR se Selic > 8,5%; senão 70% da Selic.',
       'CDI de referência: Selic − 0,10 p.p.',
       'Taxas de administração, performance e custódia reduzem a rentabilidade líquida.',

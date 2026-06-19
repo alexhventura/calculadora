@@ -1,14 +1,49 @@
 import { describe, it, expect } from 'vitest';
-import { currencyAmountSizeClass } from './currencyDisplay';
+import {
+  currencyAmountFontSizeRem,
+  currencyFormattedLength,
+  getCurrencyAmountMetrics,
+} from './currencyDisplay';
 
-describe('currencyAmountSizeClass', () => {
-  it('reduz fonte a partir de 1 milhão no variant card', () => {
-    expect(currencyAmountSizeClass(999_999, 'card')).toContain('text-lg');
-    expect(currencyAmountSizeClass(1_000_000, 'card')).toContain('text-xs');
-    expect(currencyAmountSizeClass(10_000_000, 'card')).toContain('text-[0.62rem]');
+describe('currencyFormattedLength', () => {
+  it('conta caracteres do valor formatado em BRL', () => {
+    expect(currencyFormattedLength(1_000_000)).toBeGreaterThan(14);
+    expect(currencyFormattedLength(50_000)).toBeGreaterThan(10);
+  });
+});
+
+describe('currencyAmountFontSizeRem', () => {
+  it('mantém fonte maior para valores menores', () => {
+    const small = currencyAmountFontSizeRem(50_000, 'card');
+    const million = currencyAmountFontSizeRem(1_000_000, 'card');
+    expect(small).toBeGreaterThan(million);
+    expect(small).toBeGreaterThanOrEqual(1.2);
   });
 
-  it('mantém tamanho maior para valores menores', () => {
-    expect(currencyAmountSizeClass(50_000, 'card')).toContain('text-lg');
+  it('reduz gradualmente conforme o valor cresce, sem ficar ilegível no mobile', () => {
+    const million = currencyAmountFontSizeRem(1_000_000, 'card');
+    const tenMillion = currencyAmountFontSizeRem(10_000_000, 'card');
+    const hundredMillion = currencyAmountFontSizeRem(100_000_000, 'card');
+
+    expect(million).toBeGreaterThanOrEqual(0.85);
+    expect(tenMillion).toBeGreaterThanOrEqual(0.85);
+    expect(hundredMillion).toBeGreaterThanOrEqual(0.85);
+    expect(million).toBeGreaterThan(tenMillion);
+    expect(tenMillion).toBeGreaterThan(hundredMillion);
+  });
+
+  it('highlight usa escala maior que card para o mesmo valor', () => {
+    const card = currencyAmountFontSizeRem(1_000_000, 'card');
+    const highlight = currencyAmountFontSizeRem(1_000_000, 'highlight');
+    expect(highlight).toBeGreaterThan(card);
+  });
+});
+
+describe('getCurrencyAmountMetrics', () => {
+  it('expõe variáveis CSS para escala fluida', () => {
+    const metrics = getCurrencyAmountMetrics(1_000_000, 'card');
+    expect(metrics.charLength).toBeGreaterThan(0);
+    expect(metrics.cssVars['--currency-len']).toBe(metrics.charLength);
+    expect(metrics.cssVars['--currency-size']).toContain('rem');
   });
 });

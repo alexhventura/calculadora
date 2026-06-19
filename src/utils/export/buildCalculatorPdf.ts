@@ -182,8 +182,8 @@ export function buildCalculatorPdfPayload(
       entradas.push(
         line('Salário bruto CLT', moneyStr(form.salarioCltStr ?? '')),
         line('VR/VA mensal', moneyStr(form.cltVrStr ?? '')),
-        line('Plano de saúde', moneyStr(form.cltSaudeStr ?? '')),
-        line('Outros benefícios', moneyStr(form.cltOutrosStr ?? '')),
+        line('Plano de saúde mensal', moneyStr(form.cltSaudeStr ?? '')),
+        line('Outros benefícios mensais', moneyStr(form.cltOutrosStr ?? '')),
       );
       if (form.faturamentoPjStr?.trim()) {
         entradas.push(line('Faturamento PJ informado', moneyStr(form.faturamentoPjStr)));
